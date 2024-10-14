@@ -1,0 +1,9 @@
+name: Rocketeer
+main: org.derjannik.rocketeer.Rocketeer
+version: 1.0
+api-version: 1.21
+commands:
+  rocketeer:
+    description: Spawns the Rocketeer mob or gives a spawn egg.
+    usage: /rocketeer [x] [y] [z] or /rocketeer egg
+    permission: rocketeer.use
