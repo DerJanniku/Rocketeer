@@ -1,7 +1,7 @@
 name: Rocketeer
 main: org.derjannik.rocketeer.Rocketeer
-version: 1.0
-api-version: 1.21
+version: "1.0"  # Ensure version is a string, so it's in quotes
+api-version: "1.21"  # Again, ensure it's a string by using quotes
 commands:
   rocketeer:
     description: Spawns the Rocketeer mob or gives a spawn egg.
