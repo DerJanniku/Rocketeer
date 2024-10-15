@@ -1,8 +1,0 @@
-name: Rocketeer
-version: '1.0'
-main: org.derjannik.rocketeer.Rocketeer
-api-version: '1.21'
-commands:
-rocketeer:
-description: Spawns a Rocketeer entity.
-usage: /rocketeer [x] [y] [z]
