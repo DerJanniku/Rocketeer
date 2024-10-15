@@ -57,22 +57,19 @@
         </plugins>
     </build>
 
+    <repositories>
+        <repository>
+            <id>papermc-repo</id>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
-            <version>1.21.1</version>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>1.21.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.bukkit</groupId>
-            <artifactId>bukkit</artifactId>
-            <version>1.21.1</version>
-        </dependency>
-        <dependency>
-            <groupId>net.minecraft</groupId>
-            <artifactId>minecraft-server</artifactId>
-            <version>1.21.1</version>
         </dependency>
     </dependencies>
 </project>
