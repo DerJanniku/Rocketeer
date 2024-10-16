@@ -43,6 +43,12 @@ public class Rocketeer {
         this.resupplyStation = resupplyStation;
         this.uuid = UUID.randomUUID();
     }
+    public Rocketeer(Piglin mob) {
+        this.mob = mob;
+        this.uuid = UUID.randomUUID();
+        this.resupplyStation = null;
+
+    }
 
     private ItemStack createCrossbow() {
         ItemStack crossbow = new ItemStack(Material.CROSSBOW);

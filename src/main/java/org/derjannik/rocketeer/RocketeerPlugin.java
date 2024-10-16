@@ -9,8 +9,20 @@ public class RocketeerPlugin extends JavaPlugin {
     public void onEnable() {
         // Plugin startup logic
         getLogger().info("Rocketeer plugin has been enabled!");
-        // Register commands and events here
-        this.getCommand("rocketeer").setExecutor(new RocketeerCommand());
+
+        // Check if the command is registered
+        if (this.getCommand("rocketeer") == null) {
+            getLogger().severe("Command 'rocketeer' is not registered!");
+        } else {
+            this.getCommand("rocketeer").setExecutor(new RocketeerCommand());
+            getLogger().info("Command 'rocketeer' has been registered successfully.");
+        }
+
+        if (this.getCommand("rocketeer_egg") == null) {
+            getLogger().severe("Command 'rocketeer_egg' is not registered!");
+        } else {
+            getLogger().info("Command 'rocketeer_egg' has been registered successfully.");
+        }
     }
 
     @Override

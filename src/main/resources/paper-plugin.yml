@@ -1,6 +1,10 @@
 name: Rocketeer
-main: org.derjannik.rocketeer.RocketeerPlugin
-version: 1.0
-api-version: 1.21
-author: derjannik
-description: A custom Rocketeer mob plugin for PaperMC.
+version: '1.0'
+author: DerJannik
+api-version: '1.21'
+description: Spawns a Rocketeer
+main: org.derjannik.rocketeer.Rocketeer
+commands:
+    rocketeer:
+        description: Spawns a Rocketeer
+        usage: /rocketeer [x] [y] [z] or /rocketeer egg
