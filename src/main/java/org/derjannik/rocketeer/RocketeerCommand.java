@@ -14,9 +14,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.enchantments.EnchantmentWrapper;
 import org.bukkit.Color;
 import org.bukkit.Particle;
+import org.bukkit.inventory.meta.CrossbowMeta;
 
 public class RocketeerCommand implements CommandExecutor {
 

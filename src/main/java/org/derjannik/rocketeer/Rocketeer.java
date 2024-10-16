@@ -11,10 +11,8 @@ import org.bukkit.inventory.meta.CrossbowMeta;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
-import org.bukkit.enchantments.EnchantmentWrapper;
 import org.bukkit.Color;
 import org.bukkit.Particle;
-
 import java.util.List;
 import java.util.ArrayList;
 import java.util.UUID;
@@ -28,12 +26,14 @@ import org.bukkit.FireworkEffect.Type;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.Sound;
 import org.bukkit.Particle;
+import org.derjannik.rocketeer.ResupplyStation;
 
 public class Rocketeer {
     private final Piglin mob;
     private final List<ItemStack> rockets = new ArrayList<>();
     private final int maxRockets = 5;
     private final ResupplyStation resupplyStation;
+    private final UUID uuid;
 
     public Rocketeer(Piglin mob, ResupplyStation resupplyStation) {
         this.mob = mob;
@@ -117,7 +117,7 @@ public class Rocketeer {
         firework.setVelocity(mob.getLocation().getDirection().multiply(2));
         firework.detonate();
         mob.getWorld().playSound(mob.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
-        mob.getWorld().spawnParticle(Particle.SMOKE_NORMAL, mob.getLocation(), 10);
+        mob.getWorld().spawnParticle(Particle.SMOKE, mob.getLocation(), 10);
     }
 
     public void resupply() {
