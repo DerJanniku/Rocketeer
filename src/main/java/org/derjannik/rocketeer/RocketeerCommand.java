@@ -78,18 +78,23 @@ public class RocketeerCommand implements CommandExecutor {
         rocketeer.getEquipment().setChestplate(createLeatherArmor(Material.LEATHER_CHESTPLATE, ChatColor.DARK_RED));
         rocketeer.getEquipment().setLeggings(createLeatherArmor(Material.LEATHER_LEGGINGS, ChatColor.DARK_RED));
         rocketeer.getEquipment().setBoots(createLeatherArmor(Material.LEATHER_BOOTS, ChatColor.DARK_RED));
-        rocketeer.getEquipment().getBoots().addEnchantment(Enchantment.PROTECTION_FALL, 10);
+        rocketeer.getEquipment().getBoots().addEnchantment(Enchantment.FEATHER_FALLING, 10);
         rocketeer.getEquipment().getBoots().addEnchantment(Enchantment.SOUL_SPEED, 10);
         // Rocket Supply (Belt Mechanic)
-for (int i = 0; i < 5; i++) {
-    // Add logic for initializing rockets
-    // Example: rockets.add(new ItemStack(Material.FIREWORK_ROCKET));
-}
+        for (int i = 0; i < 5; i++) {
+            ItemStack rocket = new ItemStack(Material.FIREWORK_ROCKET);
+            rocketeer.getEquipment().setItemInOffHand(rocket);
+            System.out.println("Initialized rocket " + (i + 1) + " for Rocketeer at " + location);
+        }
+    }
+    
     private ItemStack createCrossbow() {
         ItemStack crossbow = new ItemStack(Material.CROSSBOW);
-        crossbow.addEnchantment(Enchantment.QUICK_CHARGE, 2);
-        crossbow.addEnchantment(Enchantment.VANISHING_CURSE, 1);
-        crossbow.setUnbreakable(true);
+         CrossbowMeta meta = (CrossbowMeta) crossbow.getItemMeta();
+         meta.addEnchant(Enchantment.QUICK_CHARGE, 2, true);
+         meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true);
+         meta.setUnbreakable(true);
+         crossbow.setItemMeta(meta);
         return crossbow;
     }
 
