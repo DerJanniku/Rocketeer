@@ -1,9 +1,7 @@
 
 package org.derjannik.rocketeer;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -12,7 +10,6 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Piglin;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.Material;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.potion.PotionEffect;
@@ -84,9 +81,10 @@ public class RocketeerCommand implements CommandExecutor {
         rocketeer.getEquipment().getBoots().addEnchantment(Enchantment.PROTECTION_FALL, 10);
         rocketeer.getEquipment().getBoots().addEnchantment(Enchantment.SOUL_SPEED, 10);
         // Rocket Supply (Belt Mechanic)
-        for (int i = 0; i < 5; i++) {
-
-    }
+for (int i = 0; i < 5; i++) {
+    // Add logic for initializing rockets
+    // Example: rockets.add(new ItemStack(Material.FIREWORK_ROCKET));
+}
     private ItemStack createCrossbow() {
         ItemStack crossbow = new ItemStack(Material.CROSSBOW);
         crossbow.addEnchantment(Enchantment.QUICK_CHARGE, 2);
