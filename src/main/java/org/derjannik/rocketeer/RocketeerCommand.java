@@ -106,9 +106,9 @@ public class RocketeerCommand implements CommandExecutor {
         ItemStack armor = new ItemStack(material);
         LeatherArmorMeta meta = (LeatherArmorMeta) armor.getItemMeta();
         meta.setColor(Color.fromRGB(186, 48, 48)); // Dark red color
-        meta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
-        meta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 15, true);
-        meta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 15, true);
+        meta.addEnchant(Enchantment.PROTECTION, 5, true);
+        meta.addEnchant(Enchantment.BLAST_PROTECTION, 15, true);
+        meta.addEnchant(Enchantment.PROJECTILE_PROTECTION, 15, true);
         meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true);
         armor.setItemMeta(meta);
         return armor;

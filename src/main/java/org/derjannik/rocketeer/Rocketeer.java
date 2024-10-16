@@ -3,7 +3,7 @@ package org.derjannik.rocketeer;
 import org.bukkit.entity.Piglin;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.ChatColor;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.attribute.Attribute;
@@ -12,20 +12,22 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
 import org.bukkit.Color;
+import org.bukkit.FireworkEffect;
+import org.bukkit.FireworkEffect.Type;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.Bukkit;
 import org.bukkit.Particle;
+import org.bukkit.Sound;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Firework;
+import org.bukkit.inventory.meta.FireworkMeta;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.enchantments.Enchantment;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Firework;
-import org.bukkit.inventory.meta.FireworkMeta;
-import org.bukkit.FireworkEffect;
-import org.bukkit.FireworkEffect.Type;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.Sound;
-import org.bukkit.Particle;
 import org.derjannik.rocketeer.ResupplyStation;
 
 public class Rocketeer {
@@ -34,6 +36,7 @@ public class Rocketeer {
     private final int maxRockets = 5;
     private final ResupplyStation resupplyStation;
     private final UUID uuid;
+
 
     public Rocketeer(Piglin mob, ResupplyStation resupplyStation) {
         this.mob = mob;
@@ -55,7 +58,7 @@ public class Rocketeer {
         ItemStack armor = new ItemStack(material);
         LeatherArmorMeta meta = (LeatherArmorMeta) armor.getItemMeta();
         meta.setColor(org.bukkit.Color.fromRGB(186, 48, 48));
-        meta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
+        meta.addEnchant(Enchantment.PROTECTION, 4, true);
         meta.addEnchant(Enchantment.FEATHER_FALLING, 10, true);
         meta.addEnchant(Enchantment.BLAST_PROTECTION, 15, true);
         meta.addEnchant(Enchantment.PROJECTILE_PROTECTION, 15, true);
@@ -88,7 +91,7 @@ public class Rocketeer {
         mob.getEquipment().setChestplate(createLeatherArmor(Material.LEATHER_CHESTPLATE, ChatColor.DARK_RED));
         mob.getEquipment().setLeggings(createLeatherArmor(Material.LEATHER_LEGGINGS, ChatColor.DARK_RED));
         mob.getEquipment().setBoots(createLeatherArmor(Material.LEATHER_BOOTS, ChatColor.DARK_RED));
-        mob.getEquipment().getBoots().addEnchantment(Enchantment.PROTECTION_FALL, 10);
+        mob.getEquipment().getBoots().addEnchantment(Enchantment.FEATHER_FALLING, 4);
         mob.getEquipment().getBoots().addEnchantment(Enchantment.SOUL_SPEED, 10);
         // Initialize rockets
         for (int i = 0; i < maxRockets; i++) {
