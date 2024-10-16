@@ -11,6 +11,9 @@ import org.bukkit.inventory.meta.CrossbowMeta;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
+import org.bukkit.enchantments.EnchantmentWrapper;
+import org.bukkit.Color;
+import org.bukkit.Particle;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -30,7 +33,6 @@ public class Rocketeer {
     private final Piglin mob;
     private final List<ItemStack> rockets = new ArrayList<>();
     private final int maxRockets = 5;
-    private final UUID uuid;
     private final ResupplyStation resupplyStation;
 
     public Rocketeer(Piglin mob, ResupplyStation resupplyStation) {
@@ -64,66 +66,72 @@ public class Rocketeer {
 
 
 
-public void onSpawn() {
-    // Set attributes
-    mob.setCustomName(ChatColor.BOLD + "Rocketeer");
-    mob.setCustomNameVisible(true);
-    mob.setPersistent(true);
-    mob.setRemoveWhenFarAway(false);
-    mob.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(40.0);
-    mob.setHealth(40.0);
-    mob.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.3);
-    mob.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(25.0);
-    mob.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 1, false, false));
-    mob.getEquipment().setItemInMainHand(createCrossbow());
-    mob.getEquipment().setHelmet(createLeatherArmor(Material.LEATHER_HELMET, ChatColor.DARK_RED));
-    mob.getEquipment().setChestplate(createLeatherArmor(Material.LEATHER_CHESTPLATE, ChatColor.DARK_RED));
-    mob.getEquipment().setLeggings(createLeatherArmor(Material.LEATHER_LEGGINGS, ChatColor.DARK_RED));
-    mob.getEquipment().setBoots(createLeatherArmor(Material.LEATHER_BOOTS, ChatColor.DARK_RED));
-    mob.getEquipment().getBoots().addEnchantment(Enchantment.PROTECTION_FALL, 10);
-    mob.getEquipment().getBoots().addEnchantment(Enchantment.SOUL_SPEED, 10);
-    // Initialize rockets
-    for (int i = 0; i < maxRockets; i++) {
-        rockets.add(new ItemStack(Material.FIREWORK_ROCKET));
-    }
-    // Add custom goal logic here
+    public void onSpawn() {
+        // Set attributes
+        mob.setCustomName(ChatColor.BOLD + "Rocketeer");
+        mob.setCustomNameVisible(true);
+        mob.setPersistent(true);
+        mob.setRemoveWhenFarAway(false);
+        if (mob.getAttribute(Attribute.GENERIC_MAX_HEALTH) != null) {
+            mob.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(40.0);
+        }
+        mob.setHealth(40.0);
+        if (mob.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED) != null) {
+            mob.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.3);
+        }
+        if (mob.getAttribute(Attribute.GENERIC_FOLLOW_RANGE) != null) {
+            mob.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(25.0);
+        }
+        mob.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 1, false, false));
+        mob.getEquipment().setItemInMainHand(createCrossbow());
+        mob.getEquipment().setHelmet(createLeatherArmor(Material.LEATHER_HELMET, ChatColor.DARK_RED));
+        mob.getEquipment().setChestplate(createLeatherArmor(Material.LEATHER_CHESTPLATE, ChatColor.DARK_RED));
+        mob.getEquipment().setLeggings(createLeatherArmor(Material.LEATHER_LEGGINGS, ChatColor.DARK_RED));
+        mob.getEquipment().setBoots(createLeatherArmor(Material.LEATHER_BOOTS, ChatColor.DARK_RED));
+        mob.getEquipment().getBoots().addEnchantment(Enchantment.PROTECTION_FALL, 10);
+        mob.getEquipment().getBoots().addEnchantment(Enchantment.SOUL_SPEED, 10);
+        // Initialize rockets
+        for (int i = 0; i < maxRockets; i++) {
+            rockets.add(new ItemStack(Material.FIREWORK_ROCKET));
+        }
+        // Add custom goal logic here
     }
 
     public void onDeath() {
         // Add custom death logic here
     }
 
-public void launchRocket() {
-    Location loc = mob.getLocation();
-    Firework firework = (Firework) loc.getWorld().spawnEntity(loc, EntityType.FIREWORK_ROCKET);
-    FireworkMeta meta = firework.getFireworkMeta();
-    meta.addEffect(FireworkEffect.builder()
-            .with(Type.BALL)
-            .withColor(org.bukkit.Color.ORANGE)
-            .withFade(org.bukkit.Color.YELLOW)
-            .withFlicker()
-            .withTrail()
-            .build());
-    meta.setPower(1);
-    firework.setFireworkMeta(meta);
-    firework.setVelocity(mob.getLocation().getDirection().multiply(2));
-    firework.detonate();
-    mob.getWorld().playSound(mob.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
-    mob.getWorld().spawnParticle(Particle.SMOKE_NORMAL, mob.getLocation(), 10);
-}
+    public void launchRocket() {
+        Location loc = mob.getLocation();
+        Firework firework = (Firework) loc.getWorld().spawnEntity(loc, EntityType.FIREWORK_ROCKET);
+        FireworkMeta meta = firework.getFireworkMeta();
+        meta.addEffect(FireworkEffect.builder()
+                .with(Type.BALL)
+                .withColor(org.bukkit.Color.ORANGE)
+                .withFade(org.bukkit.Color.YELLOW)
+                .withFlicker()
+                .withTrail()
+                .build());
+        meta.setPower(1);
+        firework.setFireworkMeta(meta);
+        firework.setVelocity(mob.getLocation().getDirection().multiply(2));
+        firework.detonate();
+        mob.getWorld().playSound(mob.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+        mob.getWorld().spawnParticle(Particle.SMOKE_NORMAL, mob.getLocation(), 10);
+    }
 
-public void resupply() {
-    new BukkitRunnable() {
-        @Override
-        public void run() {
-            if (rockets.size() < maxRockets) {
-                rockets.add(new ItemStack(Material.FIREWORK_ROCKET));
-                mob.getWorld().playSound(mob.getLocation(), Sound.ENTITY_CREEPER_HURT, 1.0f, 1.0f);
-            } else {
-                this.cancel();
+    public void resupply() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (rockets.size() < maxRockets) {
+                    rockets.add(new ItemStack(Material.FIREWORK_ROCKET));
+                    mob.getWorld().playSound(mob.getLocation(), Sound.ENTITY_CREEPER_HURT, 1.0f, 1.0f);
+                } else {
+                    this.cancel();
+                }
             }
-        }
-    }.runTaskTimer(Bukkit.getPluginManager().getPlugin("Rocketeer"), 0, 40);
+        }.runTaskTimer(Bukkit.getPluginManager().getPlugin("Rocketeer"), 0, 40);
     }
 
     public @NotNull String getName() {

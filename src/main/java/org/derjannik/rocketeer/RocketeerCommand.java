@@ -14,6 +14,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.enchantments.EnchantmentWrapper;
+import org.bukkit.Color;
+import org.bukkit.Particle;
 
 public class RocketeerCommand implements CommandExecutor {
 
@@ -86,15 +89,16 @@ public class RocketeerCommand implements CommandExecutor {
             rocketeer.getEquipment().setItemInOffHand(rocket);
             System.out.println("Initialized rocket " + (i + 1) + " for Rocketeer at " + location);
         }
+        // Add custom goal logic here
     }
-    
+
     private ItemStack createCrossbow() {
         ItemStack crossbow = new ItemStack(Material.CROSSBOW);
-         CrossbowMeta meta = (CrossbowMeta) crossbow.getItemMeta();
-         meta.addEnchant(Enchantment.QUICK_CHARGE, 2, true);
-         meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true);
-         meta.setUnbreakable(true);
-         crossbow.setItemMeta(meta);
+        CrossbowMeta meta = (CrossbowMeta) crossbow.getItemMeta();
+        meta.addEnchant(Enchantment.QUICK_CHARGE, 2, true);
+        meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true);
+        meta.setUnbreakable(true);
+        crossbow.setItemMeta(meta);
         return crossbow;
     }
 
