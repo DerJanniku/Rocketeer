@@ -22,7 +22,12 @@ public class ResupplyStation {
             if (block.getType() == Material.CHEST) {
                 ItemStack supplies = new ItemStack(Material.FIREWORK_ROCKET, 64);
                 mob.getEquipment().setItemInMainHand(supplies);
+                System.out.println("Resupplied " + mob.getName() + " at " + closestStation);
+            } else {
+                System.out.println("No chest found at " + closestStation);
             }
+        } else {
+            System.out.println("No closest station found for " + mob.getName());
         }
     }
 

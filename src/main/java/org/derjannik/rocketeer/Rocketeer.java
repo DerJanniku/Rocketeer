@@ -54,16 +54,15 @@ public class Rocketeer {
         LeatherArmorMeta meta = (LeatherArmorMeta) armor.getItemMeta();
         meta.setColor(org.bukkit.Color.fromRGB(186, 48, 48));
         meta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
-        meta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 15, true);
-        meta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 15, true);
+        meta.addEnchant(Enchantment.FEATHER_FALLING, 10, true);
+        meta.addEnchant(Enchantment.BLAST_PROTECTION, 15, true);
+        meta.addEnchant(Enchantment.PROJECTILE_PROTECTION, 15, true);
         meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true);
         armor.setItemMeta(meta);
         return armor;
     }
 
-    public Rocketeer(Mob mob) {
-        this.mob = mob;
-    }
+
 
 public void onSpawn() {
     // Set attributes
@@ -96,7 +95,7 @@ public void onSpawn() {
 
 public void launchRocket() {
     Location loc = mob.getLocation();
-    Firework firework = (Firework) loc.getWorld().spawnEntity(loc, EntityType.FIREWORK);
+    Firework firework = (Firework) loc.getWorld().spawnEntity(loc, EntityType.FIREWORK_ROCKET);
     FireworkMeta meta = firework.getFireworkMeta();
     meta.addEffect(FireworkEffect.builder()
             .with(Type.BALL)
