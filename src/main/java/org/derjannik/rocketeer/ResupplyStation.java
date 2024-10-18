@@ -7,12 +7,16 @@ import org.bukkit.entity.Mob;
 import org.bukkit.inventory.ItemStack;
 import java.util.List;
 
-public class ResupplyStation {
-    private final List<Location> stations;
+public class RocketeerCommand implements CommandExecutor {
 
-    public ResupplyStation(List<Location> stations) {
-        this.stations = stations;
+    private final RocketeerPlugin plugin;
+
+    public RocketeerCommand(RocketeerPlugin plugin) {
+        this.plugin = plugin;
     }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
     public void resupply(Mob mob) {
         Location closestStation = this.findClosestStation(mob.getLocation(), stations);
