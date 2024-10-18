@@ -13,10 +13,11 @@ public class RocketeerListener implements Listener {
         this.plugin = plugin;
     }
 
+    
     @EventHandler
-    public void onPiglinSpawn(EntitySpawnEvent event) {
-        if (event.getEntity() instanceof Piglin) {
-            // Logic to recognize and manage rocketeer spawns
-        }
+    public void onEntitySpawn(EntitySpawnEvent event) {
+        if (event.getEntityType() == EntityType.PIGLIN) {
+        // Check if it's a Rocketeer and set up accordingly
     }
 }
+
