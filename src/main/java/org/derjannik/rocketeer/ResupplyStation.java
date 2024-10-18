@@ -7,7 +7,7 @@ import org.bukkit.entity.Mob;
 import org.bukkit.inventory.ItemStack;
 import java.util.List;
 
-public class RocketeerCommand implements CommandExecutor {
+public class ResupplyStation implements CommandExecutor {
 
     private final RocketeerPlugin plugin;
 
