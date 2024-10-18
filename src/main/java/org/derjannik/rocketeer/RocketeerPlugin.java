@@ -1,33 +1,25 @@
-
-package org.derjannik.rocketeer;
-
-import org.bukkit.plugin.java.JavaPlugin;
-
 public class RocketeerPlugin extends JavaPlugin {
+
+    private ResupplyStation resupplyStation;
 
     @Override
     public void onEnable() {
-        // Plugin startup logic
+        // Initialize ResupplyStation
+        this.resupplyStation = new ResupplyStation(/* Add parameters as needed */);
+
+        // Register commands
+        this.getCommand("rocketeer").setExecutor(new RocketeerCommand(this));
+        this.getCommand("rocketeer_egg").setExecutor(new RocketeerEggCommand());
+
         getLogger().info("Rocketeer plugin has been enabled!");
-
-        // Check if the command is registered
-        if (this.getCommand("rocketeer") == null) {
-            getLogger().severe("Command 'rocketeer' is not registered!");
-        } else {
-            this.getCommand("rocketeer").setExecutor(new RocketeerCommand());
-            getLogger().info("Command 'rocketeer' has been registered successfully.");
-        }
-
-        if (this.getCommand("rocketeer_egg") == null) {
-            getLogger().severe("Command 'rocketeer_egg' is not registered!");
-        } else {
-            getLogger().info("Command 'rocketeer_egg' has been registered successfully.");
-        }
     }
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
         getLogger().info("Rocketeer plugin has been disabled!");
+    }
+
+    public ResupplyStation getResupplyStation() {
+        return this.resupplyStation;
     }
 }
