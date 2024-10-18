@@ -10,6 +10,7 @@ public class RocketeerPlugin extends JavaPlugin {
     public void onEnable() {
         // Initialize RocketeerManager
         this.rocketeerManager = new RocketeerManager(this);
+        this.getCommand("rocketeer").setExecutor(new RocketeerCommand());
 
         // Register commands
         if (this.getCommand("rocketeer") == null) {
