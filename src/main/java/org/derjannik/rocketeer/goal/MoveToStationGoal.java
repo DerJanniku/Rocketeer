@@ -19,7 +19,7 @@ public class MoveToStationGoal implements Goal<Mob> {
 
     @Override
     public boolean shouldActivate() {
-        return this.mob.getTarget() != null;
+        return this.mob.getEquipment().getItemInOffHand().getType() != Material.FIREWORK_ROCKET;
     }
 
     @Override
