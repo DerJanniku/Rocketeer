@@ -5,6 +5,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Piglin;
 import org.bukkit.entity.EntityType;
 import org.bukkit.World;
+import org.bukkit.metadata.FixedMetadataValue;
 
 public class RocketeerManager {
 
@@ -38,7 +39,12 @@ public class RocketeerManager {
         }
     }
     public boolean isRocketeer(Piglin piglin) {
-        plugin.getRocketeerListener().isRocketeer(piglin);
-        return true;
+        return piglin.hasMetadata("rocketeer");
+    }
+    public void setRocketeer(Piglin piglin) {
+        piglin.setMetadata("rocketeer", new FixedMetadataValue(plugin, true));
+    }
+    public void unsetRocketeer(Piglin piglin) {
+        piglin.removeMetadata("rocketeer", plugin);
     }
 }

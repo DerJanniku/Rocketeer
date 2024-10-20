@@ -1,25 +1,18 @@
 package org.derjannik.rocketeer;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import java.util.List;
+import java.util.ArrayList;
 
 public class RocketeerPlugin extends JavaPlugin {
 
-<<<<<<< HEAD
-    private RocketeerManager rocketeerManager; // private Deklaration
-
-    @Override
-    public void onEnable() {
-        this.rocketeerManager = new RocketeerManager(this);
-        getCommand("rocketeer").setExecutor(new RocketeerCommand(this));
-        getServer().getPluginManager().registerEvents(new RocketeerListener(this), this);
-=======
     private RocketeerManager rocketeerManager;
 
     @Override
     public void onEnable() {
         // Initialize RocketeerManager
         this.rocketeerManager = new RocketeerManager(this);
-        this.getCommand("rocketeer").setExecutor(new RocketeerCommand());
+        this.getCommand("rocketeer").setExecutor(new RocketeerCommand(this));
 
         // Register commands
         if (this.getCommand("rocketeer") == null) {
@@ -39,29 +32,21 @@ public class RocketeerPlugin extends JavaPlugin {
         // Register event listeners
         getServer().getPluginManager().registerEvents(new RocketeerListener(this), this);
 
->>>>>>> ff7220231f2c94e50bfd62b809700c95c92f6b10
         getLogger().info("Rocketeer plugin has been enabled!");
     }
 
     @Override
     public void onDisable() {
-<<<<<<< HEAD
-=======
         // Plugin shutdown logic
->>>>>>> ff7220231f2c94e50bfd62b809700c95c92f6b10
         getLogger().info("Rocketeer plugin has been disabled!");
     }
 
+    public List<ResupplyStation> getResupplyStations() {
+        // Placeholder implementation
+        return new ArrayList<>();
+    }
+
     public RocketeerManager getRocketeerManager() {
-
-    }
-
-    public Object getRocketeerListener() {
-        return new RocketeerListener(this);
-    }
-
-    public ResupplyStation[] getResupplyStations() {
-        return new ResupplyStation[0];
-
+        return rocketeerManager;
     }
 }

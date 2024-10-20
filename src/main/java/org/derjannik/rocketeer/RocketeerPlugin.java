@@ -1,33 +1,52 @@
 package org.derjannik.rocketeer;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import java.util.List;
+import java.util.ArrayList;
 
 public class RocketeerPlugin extends JavaPlugin {
 
-    private RocketeerManager rocketeerManager; // private Deklaration
+    private RocketeerManager rocketeerManager;
 
-    @Override
-    public void onEnable() {
-        this.rocketeerManager = new RocketeerManager(this);
-        getCommand("rocketeer").setExecutor(new RocketeerCommand(this));
-        getServer().getPluginManager().registerEvents(new RocketeerListener(this), this);
-        getLogger().info("Rocketeer plugin has been enabled!");
-    }
+        @Override
+        public void onEnable() {
+            // Initialize RocketeerManager
+            this.rocketeerManager = new RocketeerManager(this);
+            this.getCommand("rocketeer").setExecutor(new RocketeerCommand(this));
 
-    @Override
-    public void onDisable() {
-        getLogger().info("Rocketeer plugin has been disabled!");
-    }
+            // Register commands
+            if (this.getCommand("rocketeer") == null) {
+                getLogger().severe("Command 'rocketeer' is not registered!");
+            } else {
+                this.getCommand("rocketeer").setExecutor(new RocketeerCommand(this));
+                getLogger().info("Command 'rocketeer' has been registered successfully.");
+            }
 
-    public RocketeerManager getRocketeerManager() {
-        return rocketeerManager; // Kontrollierter Zugriff
-    }
+            if (this.getCommand("rocketeer_egg") == null) {
+                getLogger().severe("Command 'rocketeer_egg' is not registered!");
+            } else {
+                this.getCommand("rocketeer_egg").setExecutor(new RocketeerEggCommand(this));
+                getLogger().info("Command 'rocketeer_egg' has been registered successfully.");
+            }
 
-    public Object getRocketeerListener() {
-        return new RocketeerListener(this);
-    }
+            // Register event listeners
+            getServer().getPluginManager().registerEvents(new RocketeerListener(this), this);
 
-    public ResupplyStation[] getResupplyStations() {
-        return new ResupplyStation[0];
-    }
+            getLogger().info("Rocketeer plugin has been enabled!");
+        }
+
+        @Override
+        public void onDisable() {
+            // Plugin shutdown logic
+            getLogger().info("Rocketeer plugin has been disabled!");
+        }
+
+        public List<ResupplyStation> getResupplyStations() {
+            // Placeholder implementation
+            return new ArrayList<>();
+        }
+
+        public RocketeerManager getRocketeerManager() {
+            return rocketeerManager;
+        }
 }
