@@ -70,8 +70,152 @@ public class Rocketeer {
         this.uuid = UUID.randomUUID();
     }
 
-    public void onSpawn() {
-        // Set attributes
+    public void enterPanicMode() {
+        // Run away from the player
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                mob.getPathfinder().moveTo(findSafeLocation());
+                this.cancel();
+            }
+        }.runTaskTimer(plugin, 0, 20); // Check every second
+    }
+
+    private Location findSafeLocation() {
+        Location safeLocation = mob.getLocation();
+        double maxDistance = 0;
+
+        for (int i = 0; i < 10; i++) {
+            Location randomLocation = mob.getLocation().add(Math.random() * 20 - 10, 0, Math.random() * 20 - 10);
+            double distance = randomLocation.distance(mob.getLocation());
+            if (distance > maxDistance) {
+                maxDistance = distance;
+                safeLocation = randomLocation;
+            }
+        }
+
+        return safeLocation;
+    }
+
+    public void enterSearchMode() {
+        // Search for resupply station
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (resupplyStation != null && mob.getLocation().distance(resupplyStation.getLocation()) < 20) {
+                    enterRestockMode();
+                    this.cancel();
+                } else {
+                    mob.getPathfinder().moveTo(findNearestResupplyStation());
+                }
+            }
+        }.runTaskTimer(plugin, 0, 20); // Check every second
+    }
+
+    private Location findNearestResupplyStation() {
+        Location nearestStation = null;
+        double nearestDistance = Double.MAX_VALUE;
+
+        for (ResupplyStation station : plugin.getResupplyStations()) {
+            double distance = station.getLocation().distance(mob.getLocation());
+            if (distance < nearestDistance) {
+                nearestDistance = distance;
+                nearestStation = station.getLocation();
+            }
+        }
+
+        return nearestStation;
+    }
+
+    public void enterRestockMode() {
+        if (resupplyStation == null) {
+            enterSearchMode();
+            return;
+        }
+
+        // Move to resupply station
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (mob.getLocation().distance(resupplyStation.getLocation()) < 2) {
+                    restockRockets();
+                    this.cancel();
+                } else {
+                    mob.getPathfinder().moveTo(resupplyStation.getLocation());
+                }
+            }
+        }.runTaskTimer(plugin, 0, 20); // Check every second
+    }
+
+    private void restockRockets() {
+        new BukkitRunnable() {
+            int rocketsToRestock = maxRockets - rockets.size();
+
+            @Override
+            public void run() {
+                if (rocketsToRestock <= 0) {
+                    enterCombatMode();
+                    this.cancel();
+                    return;
+                }
+
+                rockets.add(new ItemStack(Material.FIREWORK_ROCKET));
+                rocketsToRestock--;
+            }
+        }.runTaskTimer(plugin, 0, 20 * 2); // Restock every 2 seconds
+    }
+
+    public void enterCombatMode() {
+        if (rockets.isEmpty()) {
+            enterSearchMode();
+            return;
+        }
+
+        // Targeting logic
+        mob.setTarget(findNearestPlayer());
+
+        // Shooting logic
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (mob.getTarget() == null || rockets.isEmpty()) {
+                    this.cancel();
+                    enterSearchMode();
+                    return;
+                }
+
+                shootRocket();
+            }
+        }.runTaskTimer(plugin, 0, 20 * 2); // Shoot every 2 seconds
+    }
+
+    private void shootRocket() {
+        if (rockets.isEmpty()) {
+            return;
+        }
+
+        ItemStack rocket = rockets.remove(0);
+        Firework firework = (Firework) mob.getWorld().spawnEntity(mob.getLocation(), EntityType.FIREWORK);
+        FireworkMeta meta = (FireworkMeta) rocket.getItemMeta();
+        firework.setFireworkMeta(meta);
+        firework.setVelocity(mob.getLocation().getDirection().multiply(2));
+        firework.setShooter(mob);
+        firework.detonate();
+    }
+
+    private Player findNearestPlayer() {
+        Player nearestPlayer = null;
+        double nearestDistance = Double.MAX_VALUE;
+
+        for (Player player : mob.getWorld().getPlayers()) {
+            double distance = player.getLocation().distance(mob.getLocation());
+            if (distance < nearestDistance) {
+                nearestDistance = distance;
+                nearestPlayer = player;
+            }
+        }
+
+        return nearestPlayer;
         mob.setCustomName(ChatColor.BOLD + "Rocketeer");
         mob.setCustomNameVisible(true);
         mob.setPersistent(true);
@@ -94,7 +238,6 @@ public class Rocketeer {
         mob.getEquipment().setBoots(createLeatherArmor(Material.LEATHER_BOOTS, ChatColor.DARK_RED));
         mob.getEquipment().getBoots().addEnchantment(Enchantment.FEATHER_FALLING, 10);
         mob.getEquipment().getBoots().addEnchantment(Enchantment.SOUL_SPEED, 10);
-
         // Initialize rockets
         for (int i = 0; i < maxRockets; i++) {
             rockets.add(new ItemStack(Material.FIREWORK_ROCKET));
@@ -103,6 +246,7 @@ public class Rocketeer {
         // Add custom goal logic here
         mob.addGoal(new ForgetTargetGoal(mob));
         mob.addGoal(new MoveToStationGoal(mob));
+    }
     }
 
     public void onDeath() {

@@ -13,8 +13,9 @@ public class ResupplyStation {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    }
 
-        public void resupply(Mob mob) {
+    public void resupply(Mob mob) {
             Location closestStation = this.findClosestStation(mob.getLocation(), stations);
 
             if (closestStation != null) {
