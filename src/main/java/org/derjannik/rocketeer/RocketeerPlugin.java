@@ -1,5 +1,6 @@
 package org.derjannik.rocketeer;
 
+import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 import java.util.List;
 import java.util.ArrayList;
@@ -8,32 +9,24 @@ public class RocketeerPlugin extends JavaPlugin {
 
     private RocketeerManager rocketeerManager;
 
-        @Override
-        public void onEnable() {
-            // Initialize RocketeerManager
-            this.rocketeerManager = new RocketeerManager(this);
-            this.getCommand("rocketeer").setExecutor(new RocketeerCommand(this));
+    @Override
+    public void onEnable() {
+        // Initialize RocketeerManager
+        this.rocketeerManager = new RocketeerManager(this);
 
-            // Register commands
-            if (this.getCommand("rocketeer") == null) {
-                getLogger().severe("Command 'rocketeer' is not registered!");
-            } else {
-                this.getCommand("rocketeer").setExecutor(new RocketeerCommand(this));
-                getLogger().info("Command 'rocketeer' has been registered successfully.");
-            }
-
-            if (this.getCommand("rocketeer_egg") == null) {
-                getLogger().severe("Command 'rocketeer_egg' is not registered!");
-            } else {
-                this.getCommand("rocketeer_egg").setExecutor(new RocketeerEggCommand(this));
-                getLogger().info("Command 'rocketeer_egg' has been registered successfully.");
-            }
-
-            // Register event listeners
-            getServer().getPluginManager().registerEvents(new RocketeerListener(this), this);
-
-            getLogger().info("Rocketeer plugin has been enabled!");
+        PluginCommand command = this.getCommand("rocketeer");
+        if (command == null) {
+            getLogger().severe("Command 'rocketeer' is not registered! Check plugin.yml.");
+        } else {
+            command.setExecutor(new RocketeerCommand(this));
+            getLogger().info("Command 'rocketeer' has been registered successfully.");
         }
+        // Register event listeners
+        getServer().getPluginManager().registerEvents(new RocketeerListener(this), this);
+
+        getLogger().info("Rocketeer plugin has been enabled!");
+    }
+
 
         @Override
         public void onDisable() {

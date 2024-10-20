@@ -37,8 +37,7 @@ public class RocketeerListener implements Listener {
     }
     @EventHandler
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
-        if (event.getRightClicked() instanceof Piglin) {
-            Piglin piglin = (Piglin) event.getRightClicked();
+        if (event.getRightClicked() instanceof Piglin piglin) {
             if (isRocketeer(piglin)) {
                 event.getPlayer().sendMessage("Du interagierst mit einem Rocketeer!");
             }

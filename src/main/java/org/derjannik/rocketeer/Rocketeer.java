@@ -5,25 +5,19 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.enchantments.Enchantment;
 import net.md_5.bungee.api.ChatColor;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.inventory.meta.CrossbowMeta;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
-import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
 import org.bukkit.FireworkEffect.Type;
-import org.bukkit.Bukkit;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Firework;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.derjannik.rocketeer.goal.ForgetTargetGoal;
-import org.derjannik.rocketeer.goal.MoveToStationGoal;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.UUID;
@@ -36,26 +30,62 @@ public class Rocketeer {
     private final ResupplyStation resupplyStation;
     private final UUID uuid;
     private final RocketeerPlugin plugin;
+    private final RocketeerCombatMode combatMode;
+    private final RocketeerRestockMode restockMode;
+    private final RocketeerSearchMode searchMode;
+    private final RocketeerPanicMode panicMode;
 
     public Rocketeer(Piglin mob, ResupplyStation resupplyStation, RocketeerPlugin plugin) {
         this.mob = mob;
         this.resupplyStation = resupplyStation;
         this.plugin = plugin;
         this.uuid = UUID.randomUUID();
+        this.combatMode = new RocketeerCombatMode(this);
+        this.restockMode = new RocketeerRestockMode(this);
+        this.searchMode = new RocketeerSearchMode(this);
+        this.panicMode = new RocketeerPanicMode(this);
     }
 
-    public void enterPanicMode() {
-        // Run away from the player
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                mob.getPathfinder().moveTo(findSafeLocation());
-                this.cancel();
+    public List<ItemStack> getRockets() {
+        return rockets;
+    }
+
+    public Piglin getMob() {
+        return mob;
+    }
+
+    public ResupplyStation getResupplyStation() {
+        return resupplyStation;
+    }
+
+    public RocketeerPlugin getPlugin() {
+        return plugin;
+    }
+
+    public RocketeerSearchMode getSearchMode() {
+        return searchMode;
+    }
+
+    public RocketeerRestockMode getRestockMode() {
+        return restockMode;
+    }
+
+    public Location findNearestResupplyStation() {
+        Location nearestStation = null;
+        double nearestDistance = Double.MAX_VALUE;
+
+        for (ResupplyStation station : plugin.getResupplyStations()) {
+            double distance = station.getLocation().distance(mob.getLocation());
+            if (distance < nearestDistance) {
+                nearestDistance = distance;
+                nearestStation = station.getLocation();
             }
-        }.runTaskTimer(plugin, 0, 20); // Check every second
+        }
+
+        return nearestStation;
     }
 
-    private Location findSafeLocation() {
+    public Location findSafeLocation() {
         Location safeLocation = mob.getLocation();
         double maxDistance = 0;
 
@@ -71,97 +101,7 @@ public class Rocketeer {
         return safeLocation;
     }
 
-    private Location findNearestResupplyStation() {
-        Location nearestStation = null;
-        double nearestDistance = Double.MAX_VALUE;
-
-        for (ResupplyStation station : plugin.getResupplyStations()) {
-            double distance = station.getLocation().distance(mob.getLocation());
-            if (distance < nearestDistance) {
-                nearestDistance = distance;
-                nearestStation = station.getLocation();
-            }
-        }
-
-        return nearestStation;
-    }
-
-    public void enterSearchMode() {
-        // Search for resupply station
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (resupplyStation != null && mob.getLocation().distance(resupplyStation.getLocation()) < 20) {
-                    enterRestockMode();
-                    this.cancel();
-                } else {
-                    mob.getPathfinder().moveTo(findNearestResupplyStation());
-                }
-            }
-        }.runTaskTimer(plugin, 0, 20); // Check every second
-    }
-
-    public void enterRestockMode() {
-        if (resupplyStation == null) {
-            enterSearchMode();
-            return;
-        }
-
-        // Move to resupply station
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (resupplyStation != null && mob.getLocation().distance(resupplyStation.getLocation()) < 20) {
-                    // Restock logic
-                    restock();
-                    this.cancel();
-                } else {
-                    mob.getPathfinder().moveTo(resupplyStation.getLocation());
-                }
-            }
-        }.runTaskTimer(plugin, 0, 20); // Check every second
-    }
-
-    private void restock() {
-    }
-
-    public void enterCombatMode() {
-        if (rockets.isEmpty()) {
-            enterSearchMode();
-            return;
-        }
-
-        // Targeting logic
-        mob.setTarget(findNearestPlayer());
-
-        // Shooting logic
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (!rockets.isEmpty()) {
-                    shootRocket();
-                } else {
-                    enterSearchMode();
-                    this.cancel();
-                }
-            }
-        }.runTaskTimer(plugin, 0, 20); // Check every second
-    }
-
-    private void shootRocket() {
-        if (rockets.isEmpty()) {
-            return;
-        }
-
-        ItemStack rocket = rockets.remove(0);
-        Firework firework = (Firework) mob.getWorld().spawnEntity(mob.getLocation(), EntityType.FIREWORK_ROCKET);
-        FireworkMeta meta = (FireworkMeta) rocket.getItemMeta();
-        firework.setFireworkMeta(meta);
-        firework.setVelocity(mob.getLocation().getDirection().multiply(2));
-        firework.detonate();
-    }
-
-    private Player findNearestPlayer() {
+    public Player findNearestPlayer() {
         Player nearestPlayer = null;
         double nearestDistance = Double.MAX_VALUE;
 
@@ -175,6 +115,35 @@ public class Rocketeer {
 
         return nearestPlayer;
     }
+
+    public void shootRocket() {
+        if (rockets.isEmpty()) {
+            return;
+        }
+
+        ItemStack rocket = rockets.remove(0);
+        Firework firework = (Firework) mob.getWorld().spawnEntity(mob.getLocation(), EntityType.FIREWORK_ROCKET);
+        FireworkMeta meta = (FireworkMeta) rocket.getItemMeta();
+        firework.setFireworkMeta(meta);
+        firework.setVelocity(mob.getLocation().getDirection().multiply(2));
+        firework.detonate();
+    }
+
+    public void restock() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (rockets.size() < maxRockets) {
+                    rockets.add(new ItemStack(Material.FIREWORK_ROCKET));
+                    mob.getWorld().playSound(mob.getLocation(), Sound.ENTITY_CREEPER_HURT, 1.0f, 1.0f);
+                } else {
+                    this.cancel();
+                }
+            }
+        }.runTaskTimer(plugin, 0, 40);
+    }
+
+
 
     public void onDeath() {
         // Add custom death logic here

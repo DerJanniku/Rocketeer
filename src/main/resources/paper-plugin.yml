@@ -7,4 +7,7 @@ main: org.derjannik.rocketeer.RocketeerPlugin
 commands:
     rocketeer:
         description: Spawns a Rocketeer
-        usage: /rocketeer [x] [y] [z] or /rocketeer egg
+        usage: /rocketeer [x] [y] [z]
+    rocketeer-egg:
+        description: Spawns a Rocketeer spawn egg
+        usage: /rocketeer egg

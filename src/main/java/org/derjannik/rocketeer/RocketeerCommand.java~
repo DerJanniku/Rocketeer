@@ -10,7 +10,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.jetbrains.annotations.NotNull;
 
 public class RocketeerCommand implements CommandExecutor {
 
@@ -21,10 +20,11 @@ public class RocketeerCommand implements CommandExecutor {
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, String[] args) {
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (command.getName().equalsIgnoreCase("rocketeer")) {
             if (args.length == 0) {
-                if (sender instanceof Player player) {
+                if (sender instanceof Player) {
+                    Player player = (Player) sender;
                     spawnRocketeer(player.getLocation());
                     player.sendMessage(ChatColor.GREEN + "Rocketeer spawned!");
                 } else {
@@ -42,7 +42,8 @@ public class RocketeerCommand implements CommandExecutor {
                     sender.sendMessage(ChatColor.RED + "Invalid coordinates. Please provide valid numbers.");
                 }
             } else if (args.length == 1 && args[0].equalsIgnoreCase("egg")) {
-                if (sender instanceof Player player) {
+                if (sender instanceof Player) {
+                    Player player = (Player) sender;
                     giveRocketeerEgg(player);
                 } else {
                     sender.sendMessage(ChatColor.RED + "This command can only be used by players.");
