@@ -12,7 +12,10 @@ import java.util.ArrayList;
 import org.bukkit.Bukkit;
 
 public class ResupplyStation {
-
+    public Location getLocation() {
+        // Implement the logic to return the location of the resupply station
+        return new Location(Bukkit.getWorld("world"), 0, 0, 0);
+    }
 
 
     private List<Location> stations = new ArrayList<>();
@@ -52,10 +55,5 @@ public class ResupplyStation {
         }
 
         return closest;
-    }
-
-    public Location getLocation() {
-        // Implement the logic to return the location of the resupply station
-        return new Location(Bukkit.getWorld("world"), 0, 0, 0); // Placeholder implementation
     }
 }
