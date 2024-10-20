@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> ff7220231f2c94e50bfd62b809700c95c92f6b10
 package org.derjannik.rocketeer;
 
 import org.bukkit.ChatColor;
@@ -68,4 +71,8 @@ public class RocketeerCommand implements CommandExecutor {
         player.getInventory().addItem(spawnEgg);
         player.sendMessage(ChatColor.GREEN + "Rocketeer spawn egg added to your inventory!");
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> ff7220231f2c94e50bfd62b809700c95c92f6b10

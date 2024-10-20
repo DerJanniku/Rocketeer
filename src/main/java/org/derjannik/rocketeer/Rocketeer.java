@@ -1,35 +1,7 @@
 package org.derjannik.rocketeer;
 
 import org.bukkit.entity.Piglin;
-import org.bukkit.inventory.meta.LeatherArmorMeta;
-import org.bukkit.enchantments.Enchantment;
-import net.md_5.bungee.api.ChatColor;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.inventory.meta.CrossbowMeta;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.Material;
-import org.jetbrains.annotations.NotNull;
-import org.bukkit.Color;
-import org.bukkit.FireworkEffect;
-import org.bukkit.FireworkEffect.Type;
-import org.bukkit.enchantments.Enchantment;
-import org.bukkit.Bukkit;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Firework;
-import org.bukkit.inventory.meta.FireworkMeta;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.enchantments.Enchantment;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.UUID;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.derjannik.rocketeer.ResupplyStation;
-import org.bukkit.entity.Piglin;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.enchantments.Enchantment;
 import net.md_5.bungee.api.ChatColor;
@@ -63,10 +35,12 @@ public class Rocketeer {
     private final int maxRockets = 5;
     private final ResupplyStation resupplyStation;
     private final UUID uuid;
+    private final RocketeerPlugin plugin;
 
-    public Rocketeer(Piglin mob, ResupplyStation resupplyStation) {
+    public Rocketeer(Piglin mob, ResupplyStation resupplyStation, RocketeerPlugin plugin) {
         this.mob = mob;
         this.resupplyStation = resupplyStation;
+        this.plugin = plugin;
         this.uuid = UUID.randomUUID();
     }
 
@@ -97,21 +71,6 @@ public class Rocketeer {
         return safeLocation;
     }
 
-    public void enterSearchMode() {
-        // Search for resupply station
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (resupplyStation != null && mob.getLocation().distance(resupplyStation.getLocation()) < 20) {
-                    enterRestockMode();
-                    this.cancel();
-                } else {
-                    mob.getPathfinder().moveTo(findNearestResupplyStation());
-                }
-            }
-        }.runTaskTimer(plugin, 0, 20); // Check every second
-    }
-
     private Location findNearestResupplyStation() {
         Location nearestStation = null;
         double nearestDistance = Double.MAX_VALUE;
@@ -127,6 +86,21 @@ public class Rocketeer {
         return nearestStation;
     }
 
+    public void enterSearchMode() {
+        // Search for resupply station
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (resupplyStation != null && mob.getLocation().distance(resupplyStation.getLocation()) < 20) {
+                    enterRestockMode();
+                    this.cancel();
+                } else {
+                    mob.getPathfinder().moveTo(findNearestResupplyStation());
+                }
+            }
+        }.runTaskTimer(plugin, 0, 20); // Check every second
+    }
+
     public void enterRestockMode() {
         if (resupplyStation == null) {
             enterSearchMode();
@@ -137,8 +111,9 @@ public class Rocketeer {
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (mob.getLocation().distance(resupplyStation.getLocation()) < 2) {
-                    restockRockets();
+                if (resupplyStation != null && mob.getLocation().distance(resupplyStation.getLocation()) < 20) {
+                    // Restock logic
+                    restock();
                     this.cancel();
                 } else {
                     mob.getPathfinder().moveTo(resupplyStation.getLocation());
@@ -147,22 +122,7 @@ public class Rocketeer {
         }.runTaskTimer(plugin, 0, 20); // Check every second
     }
 
-    private void restockRockets() {
-        new BukkitRunnable() {
-            int rocketsToRestock = maxRockets - rockets.size();
-
-            @Override
-            public void run() {
-                if (rocketsToRestock <= 0) {
-                    enterCombatMode();
-                    this.cancel();
-                    return;
-                }
-
-                rockets.add(new ItemStack(Material.FIREWORK_ROCKET));
-                rocketsToRestock--;
-            }
-        }.runTaskTimer(plugin, 0, 20 * 2); // Restock every 2 seconds
+    private void restock() {
     }
 
     public void enterCombatMode() {
@@ -178,15 +138,14 @@ public class Rocketeer {
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (mob.getTarget() == null || rockets.isEmpty()) {
-                    this.cancel();
+                if (!rockets.isEmpty()) {
+                    shootRocket();
+                } else {
                     enterSearchMode();
-                    return;
+                    this.cancel();
                 }
-
-                shootRocket();
             }
-        }.runTaskTimer(plugin, 0, 20 * 2); // Shoot every 2 seconds
+        }.runTaskTimer(plugin, 0, 20); // Check every second
     }
 
     private void shootRocket() {
@@ -195,11 +154,10 @@ public class Rocketeer {
         }
 
         ItemStack rocket = rockets.remove(0);
-        Firework firework = (Firework) mob.getWorld().spawnEntity(mob.getLocation(), EntityType.FIREWORK);
+        Firework firework = (Firework) mob.getWorld().spawnEntity(mob.getLocation(), EntityType.FIREWORK_ROCKET);
         FireworkMeta meta = (FireworkMeta) rocket.getItemMeta();
         firework.setFireworkMeta(meta);
         firework.setVelocity(mob.getLocation().getDirection().multiply(2));
-        firework.setShooter(mob);
         firework.detonate();
     }
 
@@ -216,37 +174,6 @@ public class Rocketeer {
         }
 
         return nearestPlayer;
-        mob.setCustomName(ChatColor.BOLD + "Rocketeer");
-        mob.setCustomNameVisible(true);
-        mob.setPersistent(true);
-        mob .setRemoveWhenFarAway(false);
-        if (mob.getAttribute(Attribute.GENERIC_MAX_HEALTH) != null) {
-            mob.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(40.0);
-        }
-        mob.setHealth(40.0);
-        if (mob.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED) != null) {
-            mob.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.3);
-        }
-        if (mob.getAttribute(Attribute.GENERIC_FOLLOW_RANGE) != null) {
-            mob.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(25.0);
-        }
-        mob.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 1, false, false));
-        mob.getEquipment().setItemInMainHand(createCrossbow());
-        mob.getEquipment().setHelmet(createLeatherArmor(Material.LEATHER_HELMET, ChatColor.DARK_RED));
-        mob.getEquipment().setChestplate(createLeatherArmor(Material.LEATHER_CHESTPLATE, ChatColor.DARK_RED));
-        mob.getEquipment().setLeggings(createLeatherArmor(Material.LEATHER_LEGGINGS, ChatColor.DARK_RED));
-        mob.getEquipment().setBoots(createLeatherArmor(Material.LEATHER_BOOTS, ChatColor.DARK_RED));
-        mob.getEquipment().getBoots().addEnchantment(Enchantment.FEATHER_FALLING, 10);
-        mob.getEquipment().getBoots().addEnchantment(Enchantment.SOUL_SPEED, 10);
-        // Initialize rockets
-        for (int i = 0; i < maxRockets; i++) {
-            rockets.add(new ItemStack(Material.FIREWORK_ROCKET));
-        }
-
-        // Add custom goal logic here
-        mob.addGoal(new ForgetTargetGoal(mob));
-        mob.addGoal(new MoveToStationGoal(mob));
-    }
     }
 
     public void onDeath() {
@@ -283,7 +210,7 @@ public class Rocketeer {
                     this.cancel();
                 }
             }
-        }.runTaskTimer(Bukkit.getPluginManager().getPlugin("Rocketeer"), 0, 40);
+        }.runTaskTimer(plugin, 0, 40);
     }
 
     public @NotNull String getName() {
