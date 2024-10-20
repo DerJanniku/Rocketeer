@@ -3,7 +3,7 @@ version: '1.0'
 author: DerJannik
 api-version: '1.21'
 description: Spawns a Rocketeer
-main: org.derjannik.rocketeer.Rocketeer
+main: org.derjannik.rocketeer.RocketeerPlugin
 commands:
     rocketeer:
         description: Spawns a Rocketeer

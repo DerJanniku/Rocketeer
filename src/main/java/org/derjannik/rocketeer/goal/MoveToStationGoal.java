@@ -3,6 +3,7 @@ package org.derjannik.rocketeer.goal;
 import com.destroystokyo.paper.entity.ai.Goal;
 import com.destroystokyo.paper.entity.ai.GoalKey;
 import com.destroystokyo.paper.entity.ai.GoalType;
+import org.bukkit.Material;
 import org.bukkit.entity.Mob;
 import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
