@@ -1,13 +1,8 @@
-name: Rocketeer
-version: '1.0'
-author: DerJannik
-api-version: '1.21'
-description: Spawns a Rocketeer
-main: org.derjannik.rocketeer.RocketeerPlugin
+name: RocketeerPlugin
+version: 1.0
+main: org.derjannik.rocketeerPlugin.RocketeerPlugin
+api-version: 1.21
 commands:
-    rocketeer:
-        description: Spawns a Rocketeer
-        usage: /rocketeer [x] [y] [z]
-    rocketeer-egg:
-        description: Spawns a Rocketeer spawn egg
-        usage: /rocketeer egg
+  rocketeer:
+    description: Spawn a Rocketeer or get a Rocketeer spawn egg
+    usage: /<command> [x] [y] [z] | /<command> egg
