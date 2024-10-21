@@ -1,5 +1,7 @@
 package org.derjannik.rocketeerPlugin;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.enchantments.Enchantment;
@@ -15,9 +17,10 @@ import org.bukkit.util.EulerAngle;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Rocketeer {
-    public static final String ROCKETEER_NAME = ChatColor.RED + "" + ChatColor.BOLD + "Rocketeer";
+    public static final Component ROCKETEER_NAME = Component.text("Rocketeer").color(TextColor.color(0xFF3030)); // Red color using Adventure API
     private static final double BASE_HEALTH = 20.0;
     private static final double MOVEMENT_SPEED = 0.3;
 
@@ -30,11 +33,20 @@ public class Rocketeer {
     public Rocketeer(Location location, RocketeerPlugin plugin) {
         this.plugin = plugin;
         this.entity = (Piglin) location.getWorld().spawnEntity(location, EntityType.PIGLIN);
-        this.entity.setCustomName(ROCKETEER_NAME);
+
+        // Set the custom name using Adventure API
+        this.entity.customName(ROCKETEER_NAME);
         this.entity.setCustomNameVisible(true);
-        this.entity.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(BASE_HEALTH);
-        this.entity.setHealth(BASE_HEALTH);
-        this.entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(MOVEMENT_SPEED);
+
+        // Check for null before setting attributes to avoid potential NullPointerException
+        if (entity.getAttribute(Attribute.GENERIC_MAX_HEALTH) != null) {
+            Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_MAX_HEALTH)).setBaseValue(BASE_HEALTH);
+        }
+        entity.setHealth(BASE_HEALTH);
+
+        if (entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED) != null) {
+            Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED)).setBaseValue(MOVEMENT_SPEED);
+        }
 
         this.dataContainer = this.entity.getPersistentDataContainer();
         this.dataContainer.set(plugin.getRocketKey(), PersistentDataType.INTEGER, 5);
@@ -54,7 +66,9 @@ public class Rocketeer {
     }
 
     public int getRocketCount() {
-        return dataContainer.get(plugin.getRocketKey(), PersistentDataType.INTEGER);
+        // Safely handle null values from PersistentDataContainer
+        Integer rocketCount = dataContainer.get(plugin.getRocketKey(), PersistentDataType.INTEGER);
+        return (rocketCount != null) ? rocketCount : 0;
     }
 
     public void setRocketCount(int count) {
@@ -135,7 +149,7 @@ public class Rocketeer {
         rocketStand.setGravity(false);
         rocketStand.setSmall(true);
         rocketStand.setMarker(true);
-        rocketStand.setHelmet(new ItemStack(Material.FIREWORK_ROCKET));
+        rocketStand.getEquipment().setHelmet(new ItemStack(Material.FIREWORK_ROCKET));
         rocketStand.setHeadPose(new EulerAngle(Math.PI / 2, 0, 0));
         return rocketStand;
     }
@@ -147,6 +161,7 @@ public class Rocketeer {
         rocketStands.clear();
     }
 
+    @SuppressWarnings("unused")
     public void loadRocket() {
         if (getRocketCount() > 0) {
             setRocketCount(getRocketCount() - 1);
@@ -156,6 +171,7 @@ public class Rocketeer {
         }
     }
 
+    @SuppressWarnings("unused")
     public void playRestockSound() {
         entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_CREEPER_HURT, 1f, 0f);
     }
@@ -165,9 +181,9 @@ public class Rocketeer {
         for (int i = 0; i < rocketStands.size(); i++) {
             ArmorStand stand = rocketStands.get(i);
             if (i < rocketCount) {
-                stand.setHelmet(new ItemStack(Material.FIREWORK_ROCKET));
+                stand.getEquipment().setHelmet(new ItemStack(Material.FIREWORK_ROCKET));
             } else {
-                stand.setHelmet(null);
+                stand.getEquipment().setHelmet(null); // Updated to use getEquipment()
             }
         }
     }

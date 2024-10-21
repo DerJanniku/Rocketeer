@@ -6,13 +6,15 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import org.bukkit.*;
+import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -20,10 +22,10 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.logging.Level;
 
 import static com.mojang.brigadier.arguments.IntegerArgumentType.integer;
 
@@ -37,7 +39,6 @@ public class RocketeerPlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         getLogger().info("RocketeerPlugin has been enabled!");
-
         this.rocketKey = new NamespacedKey(this, "rockets");
         this.rocketeerSpawnEggKey = new NamespacedKey(this, "rocketeer_spawn_egg");
 
@@ -53,8 +54,7 @@ public class RocketeerPlugin extends JavaPlugin implements Listener {
     }
 
     private void registerCommands() {
-        LiteralArgumentBuilder<CommandSender> rocketeerCommand = LiteralArgumentBuilder
-                .<CommandSender>literal("rocketeer")
+        LiteralArgumentBuilder<CommandSender> rocketeerCommand = LiteralArgumentBuilder.<CommandSender>literal("rocketeer")
                 .then(RequiredArgumentBuilder.<CommandSender, Integer>argument("x", integer())
                         .then(RequiredArgumentBuilder.<CommandSender, Integer>argument("y", integer())
                                 .then(RequiredArgumentBuilder.<CommandSender, Integer>argument("z", integer())
@@ -85,14 +85,15 @@ public class RocketeerPlugin extends JavaPlugin implements Listener {
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull org.bukkit.command.Command command, @NotNull String label, @NotNull String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (command.getName().equalsIgnoreCase("rocketeer")) {
+            getLogger().info("Rocketeer command received with args: " + String.join(", ", args));
             if (sender instanceof Player player) {
                 try {
                     dispatcher.execute(String.join(" ", args), player);
                 } catch (CommandSyntaxException e) {
                     player.sendMessage(Component.text("Invalid command syntax!").color(NamedTextColor.RED));
-                    getLogger().severe("Command syntax error: " + e.getMessage());
+                    getLogger().log(Level.SEVERE, "Command syntax error", e);
                 }
             }
             return true;
@@ -118,19 +119,31 @@ public class RocketeerPlugin extends JavaPlugin implements Listener {
     }
 
     private void giveRocketeerSpawnEgg(Player player) {
-        ItemStack spawnEgg = new ItemStack(Material.PIGLIN_SPAWN_EGG);
+        ItemStack spawnEgg = new ItemStack(Material.EGG);
         ItemMeta meta = spawnEgg.getItemMeta();
-
-        // Using Adventure API components
-        meta.displayName(Component.text("Rocketeer Spawn Egg").color(NamedTextColor.RED));
-        List<Component> lore = new ArrayList<>();
-        lore.add(Component.text("Right-click to spawn a Rocketeer").color(NamedTextColor.GRAY));
-        meta.lore(lore);
-
+        meta.setDisplayName("Rocketeer Spawn Egg");
         PersistentDataContainer container = meta.getPersistentDataContainer();
-        container.set(rocketeerSpawnEggKey, PersistentDataType.BOOLEAN, true);
-
+        container.set(rocketeerSpawnEggKey, PersistentDataType.BYTE, (byte) 1);
         spawnEgg.setItemMeta(meta);
         player.getInventory().addItem(spawnEgg);
+    }
+
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            ItemStack item = event.getItem();
+            if (item != null) {
+                ItemMeta meta = item.getItemMeta();
+                if (meta != null) {
+                    PersistentDataContainer container = meta.getPersistentDataContainer();
+                    if (container.has(rocketeerSpawnEggKey, PersistentDataType.BYTE)) {
+                        Location spawnLocation = Objects.requireNonNull(event.getClickedBlock()).getLocation().add(0.5, 0, 0.5);
+                        spawnRocketeer(spawnLocation);
+                        event.setCancelled(true);
+                        item.setAmount(item.getAmount() - 1);
+                    }
+                }
+            }
+        }
     }
 }
