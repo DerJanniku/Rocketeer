@@ -20,6 +20,24 @@ import java.util.List;
 import java.util.Objects;
 
 public class Rocketeer {
+
+    public void spawnRocketeer(Location location) {
+        World world = location.getWorld();
+        if (world != null) {
+            Piglin piglin = (Piglin) world.spawnEntity(location, EntityType.PIGLIN);
+            piglin.setCustomName(ChatColor.RED + "Rocketeer");
+            piglin.setCustomNameVisible(true);
+            piglin.setPersistent(true);
+            piglin.setAdult();
+            piglin.getEquipment().setHelmet(new ItemStack(Material.IRON_HELMET));
+            piglin.getEquipment().setChestplate(new ItemStack(Material.IRON_CHESTPLATE));
+            piglin.getEquipment().setLeggings(new ItemStack(Material.IRON_LEGGINGS));
+            piglin.getEquipment().setBoots(new ItemStack(Material.IRON_BOOTS));
+            piglin.getEquipment().setItemInMainHand(new ItemStack(Material.CROSSBOW));
+            piglin.getEquipment().setItemInMainHandDropChance(0);
+            piglin.setImmuneToZombification(true);
+        }
+    }
     public static final Component ROCKETEER_NAME = Component.text("Rocketeer").color(TextColor.color(0xFF3030)); // Red color using Adventure API
     private static final double BASE_HEALTH = 20.0;
     private static final double MOVEMENT_SPEED = 0.3;
