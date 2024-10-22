@@ -13,6 +13,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.block.Action;
+import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -28,6 +32,28 @@ import java.util.Map;
 import static com.mojang.brigadier.arguments.IntegerArgumentType.integer;
 
 public class RocketeerPlugin extends JavaPlugin implements Listener {
+
+
+
+    @EventHandler
+    public void onPlayerUseSpawnEgg(PlayerInteractEvent event) {
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            ItemStack item = event.getItem();
+            if (item != null && item.getType() == Material.PIGLIN_SPAWN_EGG) {
+                ItemMeta meta = item.getItemMeta();
+                if (meta != null) {
+                    PersistentDataContainer data = meta.getPersistentDataContainer();
+                    if (data.has(rocketeerSpawnEggKey, PersistentDataType.STRING) &&
+                        "rocketeer_spawn_egg".equals(data.get(rocketeerSpawnEggKey, PersistentDataType.STRING))) {
+                        Location location = event.getClickedBlock().getLocation().add(0, 1, 0);
+                        Rocketeer rocketeer = new Rocketeer(location, this);
+                        rocketeer.spawnRocketeer(location);
+                        event.getItem().setAmount(event.getItem().getAmount() - 1);
+                    }
+                }
+            }
+        }
+    }
 
     private final Map<Entity, Rocketeer> rocketeerMap = new HashMap<>();
     private NamespacedKey rocketKey;
