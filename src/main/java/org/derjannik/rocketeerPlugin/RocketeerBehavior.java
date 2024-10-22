@@ -48,36 +48,45 @@ public class RocketeerBehavior {
     }
 
     private void fireRocket(Player target) {
-        Location startLoc = rocketeer.getEntity().getEyeLocation();
-        Vector direction = target.getEyeLocation().subtract(startLoc).toVector().normalize();
+    	if (target == null || !target.isOnline() || !rocketeer.getEntity().isValid()) {
+        	return;
+    	}
 
-        rocketeer.getEntity().getWorld().playSound(startLoc, Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.0f, 1.0f);
-        rocketeer.setRocketCount(rocketeer.getRocketCount() - 1);
+    	Location startLoc = rocketeer.getEntity().getEyeLocation();
+    	Vector direction = target.getEyeLocation().subtract(startLoc).toVector().normalize();
 
-        Firework firework = (Firework) rocketeer.getEntity().getWorld().spawnEntity(startLoc, EntityType.FIREWORK_ROCKET);
-        FireworkMeta meta = firework.getFireworkMeta();
+    	rocketeer.getEntity().getWorld().playSound(startLoc, Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.0f, 1.0f);
+    	rocketeer.setRocketCount(rocketeer.getRocketCount() - 1);
+    	rocketeer.loadRocket(); // Added this line to use the loadRocket method
 
-        meta.addEffect(org.bukkit.FireworkEffect.builder()
-                .withColor(org.bukkit.Color.RED)
-                .with(org.bukkit.FireworkEffect.Type.BALL_LARGE)
-                .trail(true)
-                .build());
+    	try {
+        	Firework firework = (Firework) rocketeer.getEntity().getWorld().spawnEntity(startLoc, EntityType.FIREWORK_ROCKET);
+        	FireworkMeta meta = firework.getFireworkMeta();
 
-        meta.setPower(2);
-        firework.setFireworkMeta(meta);
+        	meta.addEffect(org.bukkit.FireworkEffect.builder()
+                	.withColor(org.bukkit.Color.RED)
+                	.with(org.bukkit.FireworkEffect.Type.BALL_LARGE)
+                	.trail(true)
+                	.build());
 
-        firework.setVelocity(direction.multiply(1.5));
+        	meta.setPower(2);
+        	firework.setFireworkMeta(meta);
+
+        	firework.setVelocity(direction.multiply(1.5));
 
         // Schedule the detonation
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (firework.isValid()) {
-                    firework.detonate();
-                }
-            }
-        }.runTaskLater(plugin, 20); // Detonate after 1 second
-    }
+        	new BukkitRunnable() {
+            	@Override
+            	public void run() {
+                	if (firework.isValid()) {
+                    	firework.detonate();
+                	}
+            	}
+        	}.runTaskLater(plugin, 20); // Detonate after 1 second
+    	} catch (Exception e) {
+        	plugin.getLogger().warning("Failed to fire rocket: " + e.getMessage());
+    	}
+	}
 
     public void enterRestockMode() {
         isRestocking = true;
@@ -117,26 +126,25 @@ public class RocketeerBehavior {
     }
 
     private void restockRockets() {
-        if (restockTask != null) {
-            restockTask.cancel();
-        }
-
-        restockTask = new BukkitRunnable() {
-            int restockedRockets = 0;
-            @Override
-            public void run() {
-                if (restockedRockets < 5) {
-                    rocketeer.setRocketCount(rocketeer.getRocketCount() + 1);
-                    restockedRockets++;
-                    rocketeer.getEntity().getWorld().playSound(rocketeer.getEntity().getLocation(), Sound.ENTITY_CREEPER_HURT, 1.0f, 0f);
-                } else {
-                    isRestocking = false;
-                    this.cancel();
-                }
-            }
-        };
-        restockTask.runTaskTimer(plugin, 60, 40); // 3-second initial delay, then 2 seconds per rocket
+    if (restockTask != null) {
+        restockTask.cancel();
     }
+
+    restockTask = new BukkitRunnable() {
+        int restockedRockets = 0;
+        @Override
+        public void run() {
+            if (restockedRockets < 5 && rocketeer.getEntity().isValid()) {
+                rocketeer.setRocketCount(rocketeer.getRocketCount() + 1);
+                restockedRockets++;
+                rocketeer.playRestockSound(); // Added this line to use the playRestockSound method
+            } else {
+                isRestocking = false;
+                this.cancel();
+            }
+        }
+    };
+    restockTask.runTaskTimer(plugin, 60, 40); // 3-second initial delay, then 2 seconds per rocket
 
     public void interruptRestock() {
         if (restockTask != null) {
