@@ -126,9 +126,19 @@ public class RocketeerPlugin extends JavaPlugin implements Listener {
         return false;
     }
 
-    private void spawnRocketeer(Location location) {
+    public Rocketeer spawnRocketeer(Location location) {
+    if (location == null || location.getWorld() == null) {
+        getLogger().warning("Invalid location provided for spawning Rocketeer.");
+        return null;
+    }
+    
+    try {
         Rocketeer rocketeer = new Rocketeer(location, this);
         rocketeerMap.put(rocketeer.getEntity(), rocketeer);
+        return rocketeer;
+    } catch (Exception e) {
+        getLogger().severe("Failed to spawn Rocketeer: " + e.getMessage());
+        return null;
     }
 
     public Rocketeer getRocketeerByEntity(Entity entity) {
