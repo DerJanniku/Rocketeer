@@ -21,23 +21,6 @@ import java.util.Objects;
 
 public class Rocketeer {
 
-    public void spawnRocketeer(Location location) {
-        World world = location.getWorld();
-        if (world != null) {
-            Piglin piglin = (Piglin) world.spawnEntity(location, EntityType.PIGLIN);
-            piglin.setCustomName(ChatColor.RED + "Rocketeer");
-            piglin.setCustomNameVisible(true);
-            piglin.setPersistent(true);
-            piglin.setAdult();
-            piglin.getEquipment().setHelmet(new ItemStack(Material.IRON_HELMET));
-            piglin.getEquipment().setChestplate(new ItemStack(Material.IRON_CHESTPLATE));
-            piglin.getEquipment().setLeggings(new ItemStack(Material.IRON_LEGGINGS));
-            piglin.getEquipment().setBoots(new ItemStack(Material.IRON_BOOTS));
-            piglin.getEquipment().setItemInMainHand(new ItemStack(Material.CROSSBOW));
-            piglin.getEquipment().setItemInMainHandDropChance(0);
-            piglin.setImmuneToZombification(true);
-        }
-    }
     public static final Component ROCKETEER_NAME = Component.text("Rocketeer").color(TextColor.color(0xFF3030)); // Red color using Adventure API
     private static final double BASE_HEALTH = 20.0;
     private static final double MOVEMENT_SPEED = 0.3;
@@ -140,8 +123,7 @@ public class Rocketeer {
             public void run() {
                 if (entity.isDead()) {
                     this.cancel();
-                    removeRockets();
-                    return;
+                    removeRockets();  // Ensure that the ArmorStands are also cleaned up
                 }
 
                 angle += 0.1;
@@ -181,11 +163,15 @@ public class Rocketeer {
 
     @SuppressWarnings("unused")
     public void loadRocket() {
-        if (getRocketCount() > 0) {
-            setRocketCount(getRocketCount() - 1);
+        int rocketCount = getRocketCount();
+        if (rocketCount > 0) {
+            setRocketCount(rocketCount - 1);
             entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 2f);
             entity.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, entity.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 0.1);
             entity.getWorld().spawnParticle(Particle.POOF, entity.getLocation().add(0, 1, 0), 5, 0.5, 0.5, 0.5, 0.1);
+        } else {
+            // Handle case where no rockets are left
+            enterRestockMode();  // Initiates restock mode when out of rockets
         }
     }
 
@@ -201,8 +187,68 @@ public class Rocketeer {
             if (i < rocketCount) {
                 stand.getEquipment().setHelmet(new ItemStack(Material.FIREWORK_ROCKET));
             } else {
-                stand.getEquipment().setHelmet(null); // Updated to use getEquipment()
+                // Add visual feedback when the rocket disappears
+                stand.getWorld().spawnParticle(Particle.SMOKE, stand.getLocation(), 5);
+                stand.getEquipment().setHelmet(null);
             }
         }
+    }
+
+    public void enterRestockMode() {
+        Location resupplyStation = findNearestResupplyStation();
+
+        if (resupplyStation != null) {
+            // Move the Rocketeer to the resupply station
+            entity.getPathfinder().moveTo(resupplyStation);
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    // Check if the Rocketeer has reached the resupply station
+                    if (entity.getLocation().distance(resupplyStation) < 2) {
+                        restockRockets();
+                        this.cancel();  // Stop the task once restocked
+                    }
+                }
+            }.runTaskTimer(plugin, 0, 20);  // Check every second if Rocketeer reached the station
+        } else {
+            // No resupply station found, handle the panic mode (optional)
+            behavior.enterPanicMode();
+        }
+    }
+
+    private Location findNearestResupplyStation() {
+        Location rocketeerLoc = entity.getLocation();
+        World world = rocketeerLoc.getWorld();
+        int searchRadius = 20;
+
+        for (int x = -searchRadius; x <= searchRadius; x++) {
+            for (int y = -1; y <= 1; y++) {
+                for (int z = -searchRadius; z <= searchRadius; z++) {
+                    Location checkLoc = rocketeerLoc.clone().add(x, y, z);
+                    if (world.getBlockAt(checkLoc).getType() == Material.DECORATED_POT) {
+                        return checkLoc;  // Found a resupply station
+                    }
+                }
+            }
+        }
+        return null;  // No resupply station found
+    }
+
+    private void restockRockets() {
+        new BukkitRunnable() {
+            int restockedRockets = 0;
+
+            @Override
+            public void run() {
+                if (restockedRockets < 5 && entity.isValid()) {
+                    setRocketCount(getRocketCount() + 1);  // Increment rocket count
+                    restockedRockets++;
+                    playRestockSound();
+                } else {
+                    this.cancel();  // Stop once all rockets are restocked
+                }
+            }
+        }.runTaskTimer(plugin, 0, 40);  // 2-second delay between each restock
     }
 }

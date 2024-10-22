@@ -169,7 +169,8 @@ public class RocketeerBehavior {
 
         // Get nearby entities within a 20-block range
         for (org.bukkit.entity.Entity entity : rocketeer.getEntity().getNearbyEntities(20, 20, 20)) {
-            if (entity instanceof Player player) {
+            if (entity instanceof Player) {
+                Player player = (Player) entity;
                 double distance = player.getLocation().distance(rocketeerLocation);
 
                 // Prioritize players that are on the same Y-level or very close to it
@@ -179,7 +180,6 @@ public class RocketeerBehavior {
                 }
             }
         }
-
         return nearest;
     }
 

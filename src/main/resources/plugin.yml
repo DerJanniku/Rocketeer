@@ -1,0 +1,8 @@
+name: RocketeerPlugin
+version: '1.0'
+main: org.derjannik.rocketeerPlugin.RocketeerPlugin
+api-version: '1.21'
+commands:
+  rocketeer:
+    description: Spawn a Rocketeer or get a Rocketeer spawn egg
+    usage: /<command> [x] [y] [z] | /<command> egg

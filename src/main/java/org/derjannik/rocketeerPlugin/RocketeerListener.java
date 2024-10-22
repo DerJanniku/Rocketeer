@@ -54,16 +54,17 @@ public class RocketeerListener implements Listener {
             if (isRocketeer(piglin)) {
                 Rocketeer rocketeer = plugin.getRocketeerByEntity(piglin);
                 if (rocketeer != null) {
-                    // Drop custom loot
-                    event.getDrops().clear(); // Clear default drops
-                    event.getDrops().add(new ItemStack(Material.CROSSBOW)); // Add a crossbow drop
+                    // Custom loot handling
+                    event.getDrops().clear();
+                    event.getDrops().add(new ItemStack(Material.CROSSBOW));
 
-                    // Remove the Rocketeer from the plugin's tracking
-                    plugin.removeRocketeer(piglin);
+                    // Remove the Rocketeer from tracking
+                    plugin.removeRocketeer(rocketeer);
                 }
             }
         }
     }
+
 
     /**
      * Utility method to check if a Piglin is a Rocketeer by comparing its custom name.
