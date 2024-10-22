@@ -17,7 +17,7 @@ public class RocketeerBehavior {
     private BukkitRunnable panicTask;
     private BukkitRunnable restockTask;
     public boolean isRestocking = false;
-    
+
 
     public RocketeerBehavior(Rocketeer rocketeer, RocketeerPlugin plugin) {
         this.rocketeer = rocketeer;

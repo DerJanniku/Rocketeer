@@ -13,6 +13,7 @@ import java.util.UUID;
 public class RocketeerPlugin extends JavaPlugin {
 
     private NamespacedKey rocketKey;
+    private NamespacedKey combatKey;  // Added combatKey
 
     // Store Rocketeer instances using their entity's UUID as the key
     private final Map<UUID, Rocketeer> rocketeerMap = new HashMap<>();
@@ -21,6 +22,9 @@ public class RocketeerPlugin extends JavaPlugin {
     public void onEnable() {
         // Initialize the NamespacedKey for storing rocket data
         this.rocketKey = new NamespacedKey(this, "rocket_count");
+
+        // Initialize the NamespacedKey for storing combat data
+        this.combatKey = new NamespacedKey(this, "combat_key");  // Added this line
 
         // Register the command "rocketeer" and set its executor
         PluginCommand rocketeerCommand = getCommand("rocketeer");
@@ -50,6 +54,15 @@ public class RocketeerPlugin extends JavaPlugin {
      */
     public NamespacedKey getRocketKey() {
         return rocketKey;
+    }
+
+    /**
+     * Get the NamespacedKey used for managing combat data in PersistentDataContainer.
+     *
+     * @return NamespacedKey for combat data.
+     */
+    public NamespacedKey getCombatKey() {  // Added this method
+        return combatKey;
     }
 
     /**

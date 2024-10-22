@@ -1,10 +1,14 @@
 package org.derjannik.rocketeerPlugin;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SpawnEggMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
 public class RocketeerCommand implements CommandExecutor {
@@ -40,9 +44,21 @@ public class RocketeerCommand implements CommandExecutor {
                 player.sendMessage("Invalid coordinates. Usage: /rocketeer [x] [y] [z]");
             }
         } else if (args.length == 1 && args[0].equalsIgnoreCase("egg")) {
-            // You can add code here to give the player a spawn egg or handle the egg case
+            // Give the player a custom Piglin spawn egg
+            ItemStack spawnEgg = new ItemStack(Material.PIGLIN_SPAWN_EGG);
+            SpawnEggMeta eggMeta = (SpawnEggMeta) spawnEgg.getItemMeta();
+            if (eggMeta != null) {
+                eggMeta.setDisplayName("§cRocketeer Spawn Egg");
+                eggMeta.getPersistentDataContainer().set(plugin.getRocketKey(), PersistentDataType.STRING, "rocketeer_egg"); // Custom identifier
+                spawnEgg.setItemMeta(eggMeta);
+            }
+
+            // Give the player the spawn egg
+            player.getInventory().addItem(spawnEgg);
             player.sendMessage("Here is your Rocketeer spawn egg!");
-        } else {
+        }
+
+        else {
             player.sendMessage("Usage: /rocketeer [x] [y] [z] | /rocketeer egg");
         }
         return true;
