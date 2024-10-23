@@ -1,5 +1,6 @@
 package org.derjannik.rocketeerPlugin;
 
+import org.bukkit.Color;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -9,6 +10,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Piglin;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -29,9 +31,9 @@ import java.util.Objects;
 public class Rocketeer implements Listener {
 
     public static final Component ROCKETEER_NAME = Component.text("Rocketeer")
-            .color(TextColor.color(0xE02F2F)) // Updated color to #E02F2F
+            .color(TextColor.color(0xE02F2F))
             .decorate(TextDecoration.BOLD)
-            .decoration(TextDecoration.ITALIC, false); // Bold and Not Italic
+            .decoration(TextDecoration.ITALIC, false);
 
     private static final double BASE_HEALTH = 20.0;
     private static final double MAX_HEALTH = 40.0;
@@ -48,11 +50,9 @@ public class Rocketeer implements Listener {
         this.plugin = plugin;
         this.entity = (Piglin) location.getWorld().spawnEntity(location, EntityType.PIGLIN);
 
-        // Set the custom name using Adventure API
         this.entity.customName(ROCKETEER_NAME);
         this.entity.setCustomNameVisible(true);
 
-        // Set attributes safely
         if (entity.getAttribute(Attribute.GENERIC_MAX_HEALTH) != null) {
             Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_MAX_HEALTH)).setBaseValue(MAX_HEALTH);
         }
@@ -66,29 +66,20 @@ public class Rocketeer implements Listener {
             Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE)).setBaseValue(FOLLOW_RANGE);
         }
 
-        // Fire Resistance Effect
         this.entity.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 999999, 0, false, false));
-
-        // Persistence
         this.entity.setRemoveWhenFarAway(false);
-
-        // Zombification immunity
         this.entity.setImmuneToZombification(true);
-
-        // Not a baby (this is deprecated, but it's fine to use for now)
         this.entity.setBaby(false);
-
-        // Cannot pick up loot
         this.entity.setCanPickupItems(false);
 
         this.dataContainer = this.entity.getPersistentDataContainer();
-        this.dataContainer.set(plugin.getRocketKey(), PersistentDataType.INTEGER, 5); // Store rocket count
+        this.dataContainer.set(plugin.getRocketKey(), PersistentDataType.INTEGER, 5); // Initial rocket count
 
         equipRocketeer();
         spawnHoveringRockets();
 
         this.behavior = new RocketeerBehavior(this, plugin);
-        Bukkit.getPluginManager().registerEvents(this, plugin); // Register the event listener
+        Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     public Piglin getEntity() {
@@ -110,7 +101,6 @@ public class Rocketeer implements Listener {
     }
 
     private void equipRocketeer() {
-        // Crossbow with Quick Charge II, Vanishing Curse I, and unbreakable
         ItemStack crossbow = new ItemStack(Material.CROSSBOW);
         ItemMeta crossbowMeta = crossbow.getItemMeta();
         if (crossbowMeta != null) {
@@ -121,7 +111,6 @@ public class Rocketeer implements Listener {
         }
         entity.getEquipment().setItemInMainHand(crossbow);
 
-        // Armor: Tunic, Pants, Boots with color #BA3030 and various enchantments
         ItemStack tunic = createColoredArmor(Material.LEATHER_CHESTPLATE, Color.fromRGB(0xBA3030), Enchantment.PROJECTILE_PROTECTION, 5);
         ItemStack pants = createColoredArmor(Material.LEATHER_LEGGINGS, Color.fromRGB(0xBA3030), Enchantment.PROTECTION, 15);
         ItemStack boots = createColoredArmor(Material.LEATHER_BOOTS, Color.fromRGB(0xBA3030), Enchantment.FEATHER_FALLING, 10);
@@ -144,11 +133,12 @@ public class Rocketeer implements Listener {
             if (enchantment != null) {
                 meta.addEnchant(enchantment, level, true);
             }
-            meta.setUnbreakable(true); // All armor is unbreakable
+            meta.setUnbreakable(true);
             item.setItemMeta(meta);
         }
         return item;
     }
+
 
     private void spawnHoveringRockets() {
         for (int i = 0; i < 5; i++) {
@@ -204,55 +194,24 @@ public class Rocketeer implements Listener {
         rocketStands.clear();
     }
 
-    // Method to check if the Piglin is in combat
-    public boolean isInCombat() {
-        Long lastCombatTime = dataContainer.get(plugin.getCombatKey(), PersistentDataType.LONG);
-        if (lastCombatTime != null) {
-            long currentTime = System.currentTimeMillis();
-            // If the entity was in combat in the last 10 seconds (10000 ms), consider it in combat
-            return currentTime - lastCombatTime < 10000;
-        }
-        return false;
-    }
-
-    // Event handler to update combat state when attacked or attacking
     @EventHandler
     public void onEntityDamage(EntityDamageByEntityEvent event) {
         if (event.getEntity().equals(entity) || event.getDamager().equals(entity)) {
-            // Update the combat timestamp in the data container
+            // Ignore creative mode players
+            if (event.getDamager() instanceof Player player && player.getGameMode() == GameMode.CREATIVE) {
+                event.setCancelled(true);
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    player.sendMessage("Rocketeer ignored your attack.");
+                }, 1L);
+                return;
+            }
             dataContainer.set(plugin.getCombatKey(), PersistentDataType.LONG, System.currentTimeMillis());
         }
     }
 
-    // Logic for returning rockets to the belt
-    public void returnRocketToBelt() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (!isInCombat()) {
-                    setRocketCount(getRocketCount() + 1);
-                    updateHoveringRockets();
-                }
-            }
-        }.runTaskLater(plugin, 160); // Returns rocket after 8 seconds (160 ticks)
-    }
-
-    @SuppressWarnings("unused")
-    public void loadRocket() {
-        int rocketCount = getRocketCount();
-        if (rocketCount > 0) {
-            setRocketCount(rocketCount - 1);
-            entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 2f);
-            entity.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, entity.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 0.1);
-            entity.getWorld().spawnParticle(Particle.POOF, entity.getLocation().add(0, 1, 0), 5, 0.5, 0.5, 0.5, 0.1);
-        } else {
-            enterRestockMode();
-        }
-    }
-
-    @SuppressWarnings("unused")
     public void playRestockSound() {
-        entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_CREEPER_HURT, 1f, 0f);
+        // Play a sound when the Rocketeer restocks its rockets
+        entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_CREEPER_HURT, 1f, 1f);
     }
 
     private void updateHoveringRockets() {
@@ -266,60 +225,5 @@ public class Rocketeer implements Listener {
                 stand.getEquipment().setHelmet(null);
             }
         }
-    }
-
-    public void enterRestockMode() {
-        Location resupplyStation = findNearestResupplyStation();
-
-        if (resupplyStation != null) {
-            entity.getPathfinder().moveTo(resupplyStation);
-
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    if (entity.getLocation().distance(resupplyStation) < 2) {
-                        restockRockets();
-                        this.cancel();
-                    }
-                }
-            }.runTaskTimer(plugin, 0, 20);
-        } else {
-            behavior.enterPanicMode();
-        }
-    }
-
-    private Location findNearestResupplyStation() {
-        Location rocketeerLoc = entity.getLocation();
-        World world = rocketeerLoc.getWorld();
-        int searchRadius = 20;
-
-        for (int x = -searchRadius; x <= searchRadius; x++) {
-            for (int y = -1; y <= 1; y++) {
-                for (int z = -searchRadius; z <= searchRadius; z++) {
-                    Location checkLoc = rocketeerLoc.clone().add(x, y, z);
-                    if (world.getBlockAt(checkLoc).getType() == Material.DECORATED_POT) {
-                        return checkLoc;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    private void restockRockets() {
-        new BukkitRunnable() {
-            int restockedRockets = 0;
-
-            @Override
-            public void run() {
-                if (restockedRockets < 5 && entity.isValid()) {
-                    setRocketCount(getRocketCount() + 1);
-                    restockedRockets++;
-                    playRestockSound();
-                } else {
-                    this.cancel();
-                }
-            }
-        }.runTaskTimer(plugin, 0, 40);
     }
 }
