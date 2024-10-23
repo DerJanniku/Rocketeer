@@ -2,6 +2,7 @@ package org.derjannik.rocketeerPlugin;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.entity.Piglin;
 import org.bukkit.entity.Player;
@@ -10,11 +11,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SpawnEggMeta;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.entity.Arrow;
 
 public class RocketeerListener implements Listener {
     private final RocketeerPlugin plugin;
@@ -24,12 +26,18 @@ public class RocketeerListener implements Listener {
     }
 
     @EventHandler
-    public void onRocketeerTarget(EntityTargetLivingEntityEvent event) {
-        if (event.getEntity() instanceof Piglin piglin && event.getTarget() instanceof Player target) {
-            if (isRocketeer(piglin)) {
-                Rocketeer rocketeer = plugin.getRocketeerByEntity(piglin);
-                if (rocketeer != null) {
-                    rocketeer.getBehavior().enterCombatMode(target);
+    public void onRocketeerShoot(EntityShootBowEvent event) {
+        if (event.getEntity() instanceof Piglin piglin) {
+            Rocketeer rocketeer = plugin.getRocketeerByEntity(piglin);
+            if (rocketeer != null) {
+                // Cancel the arrow shot
+                if (event.getProjectile() instanceof Arrow) {
+                    event.setCancelled(true);
+                    // Trigger the rocket launch
+                    Player target = rocketeer.getBehavior().findNearestPlayer();
+                    if (target != null && target.getGameMode() != GameMode.CREATIVE) {
+                        rocketeer.getBehavior().fireRocket(target);
+                    }
                 }
             }
         }
@@ -69,9 +77,6 @@ public class RocketeerListener implements Listener {
         }
     }
 
-    /**
-     * Handle creature spawn event to detect if a Piglin was spawned via a custom Rocketeer spawn egg.
-     */
     @EventHandler
     public void onCreatureSpawn(CreatureSpawnEvent event) {
         // Check if the entity spawned is a Piglin and if the spawn reason was a spawn egg
@@ -115,7 +120,6 @@ public class RocketeerListener implements Listener {
             }
         }
     }
-
 
     /**
      * Utility method to check if a Piglin is a Rocketeer by comparing its custom name.

@@ -1,9 +1,6 @@
 package org.derjannik.rocketeerPlugin;
 
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Sound;
-import org.bukkit.entity.EntityType;
+import org.bukkit.*;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.FireworkMeta;
@@ -17,7 +14,6 @@ public class RocketeerBehavior {
     private BukkitRunnable panicTask;
     private BukkitRunnable restockTask;
     public boolean isRestocking = false;
-
 
     public RocketeerBehavior(Rocketeer rocketeer, RocketeerPlugin plugin) {
         this.rocketeer = rocketeer;
@@ -37,80 +33,114 @@ public class RocketeerBehavior {
                     return;
                 }
 
+                // Check if rockets are available
                 if (rocketeer.getRocketCount() > 0) {
                     fireRocket(target);
                 } else {
-                    enterRestockMode();
+                    // Cancel combat and enter restock mode if no rockets
                     this.cancel();
+                    enterRestockMode();
                 }
             }
         };
         combatTask.runTaskTimer(plugin, 0, 60); // Fire every 3 seconds
     }
 
-    private void fireRocket(Player target) {
-        if (target == null || !target.isOnline() || !rocketeer.getEntity().isValid()) {
+    /**
+     * Fires a rocket at the specified target player.
+     * The method handles Creative mode checks, prevents self-damage, and ensures rockets are fired correctly.
+     */
+    public void fireRocket(Player target) {
+        // Check if there are rockets before proceeding
+        if (rocketeer.getRocketCount() <= 0) {
+            enterRestockMode(); // Go for restock if no rockets
             return;
         }
 
+        // Check if the player is in Creative mode
+        if (target.getGameMode() == GameMode.CREATIVE) {
+            return; // Do not attack players in Creative mode
+        }
+
+        // Define the start location
         Location startLoc = rocketeer.getEntity().getEyeLocation();
-        Vector direction = target.getEyeLocation().subtract(startLoc).toVector().normalize();
 
-        rocketeer.getEntity().getWorld().playSound(startLoc, Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.0f, 1.0f);
-        rocketeer.setRocketCount(rocketeer.getRocketCount() - 1);
-        rocketeer.loadRocket(); // Added this line to use the loadRocket method
+        // Calculate the target location
+        Location targetLocation = target.getLocation().add(0, target.getEyeHeight(), 0);
 
-        try {
-            Firework firework = (Firework) rocketeer.getEntity().getWorld().spawnEntity(startLoc, EntityType.FIREWORK_ROCKET);
-            FireworkMeta meta = firework.getFireworkMeta();
+        // Calculate the distance and height difference
+        double distance = startLoc.distance(targetLocation);
+        double heightDifference = targetLocation.getY() - startLoc.getY();
 
-            meta.addEffect(org.bukkit.FireworkEffect.builder()
-                    .withColor(org.bukkit.Color.RED)
-                    .with(org.bukkit.FireworkEffect.Type.BALL_LARGE)
-                    .trail(true)
-                    .build());
+        // Calculate the horizontal angle (azimuth)
+        double azimuth = Math.atan2(targetLocation.getX() - startLoc.getX(), targetLocation.getZ() - startLoc.getZ());
 
-            meta.setPower(2);
-            firework.setFireworkMeta(meta);
+        // Calculate the vertical angle (elevation)
+        double elevation = Math.atan2(heightDifference, distance);
 
-            firework.setVelocity(direction.multiply(1.5));
+        // Adjust for gravity (this value may need tuning)
+        double g = 0.08; // Gravity in Minecraft (adjust if necessary)
+        double gravityAdjustment = -0.05 * distance; // Adjust based on distance
+        elevation += gravityAdjustment;
 
-            // Schedule the detonation
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    if (firework.isValid()) {
-                        firework.detonate();
-                    }
-                }
-            }.runTaskLater(plugin, 20); // Detonate after 1 second
-        } catch (Exception e) {
-            plugin.getLogger().warning("Failed to fire rocket: " + e.getMessage());
+        // Calculate launch velocity (adjust this value as needed)
+        double launchVelocity = 1.5; // Adjust this value to change the speed of the rocket
+
+        // Calculate the velocity vector for the firework
+        Vector velocity = new Vector(Math.cos(azimuth) * Math.cos(elevation), Math.sin(elevation), Math.sin(azimuth) * Math.cos(elevation)).multiply(launchVelocity);
+
+        // Play sound and animation to simulate crossbow firing
+        rocketeer.getEntity().getWorld().playSound(startLoc, Sound.ITEM_CROSSBOW_SHOOT, 1.0f, 1.0f);
+
+        // Decrement rocket count and fire the rocket
+        rocketeer.setRocketCount(rocketeer.getRocketCount() - 1); // Decrement rocket count
+
+        // Check if rockets are now zero after decrementing
+        if (rocketeer.getRocketCount() <= 0) {
+            enterRestockMode(); // Go for restock if rockets are now 0
+            return; // Stop further processing
         }
+
+        // Spawn the firework at the Rocketeer's location to mimic shooting
+        Firework firework = rocketeer.getEntity().getWorld().spawn(startLoc, Firework.class);
+        FireworkMeta meta = firework.getFireworkMeta();
+        meta.addEffect(FireworkEffect.builder()
+                .withColor(Color.RED)
+                .with(FireworkEffect.Type.BALL_LARGE)
+                .trail(true)
+                .build());
+        firework.setFireworkMeta(meta);
+
+        // Set the firework's shooter to avoid self-damage
+        firework.setShooter(rocketeer.getEntity());
+
+        // Set the velocity to simulate being shot from the crossbow
+        firework.setVelocity(velocity);
+
+        // Optionally, you can add a delay before the firework explodes
+        firework.setFireworkMeta(meta);
     }
 
-    public void enterRestockMode() {
-        isRestocking = true;
-        Location resupplyStation = findNearestResupplyStation();
-        if (resupplyStation != null) {
-            rocketeer.getEntity().getPathfinder().moveTo(resupplyStation);
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    if (rocketeer.getEntity().getLocation().distance(resupplyStation) < 2) {
-                        restockRockets();
-                        this.cancel();
-                    }
-                }
-            }.runTaskTimer(plugin, 0, 20); // Check every second
-        } else {
-            enterPanicMode();
+    /**
+     * Checks if the path between the start and target locations is clear.
+     */
+    private boolean isPathClear(Location start, Location target) {
+        // Create a ray from the start location to the target location
+        Vector direction = target.toVector().subtract(start.toVector()).normalize();
+        double distance = start.distance(target);
+
+        for (double i = 0; i < distance; i += 0.5) { // Adjust step size as needed
+            Location point = start.clone().add(direction.clone().multiply(i));
+            if (!point.getBlock().isPassable()) { // Check if the block is not passable
+                return false; // Path is blocked
+            }
         }
+        return true; // Path is clear
     }
 
-    private Location findNearestResupplyStation() {
+    public Location findNearestResupplyStation() {
         Location rocketeerLoc = rocketeer.getEntity().getLocation();
-        org.bukkit.World world = rocketeerLoc.getWorld();
+        World world = rocketeerLoc.getWorld();
         int searchRadius = 20;
 
         for (int x = -searchRadius; x <= searchRadius; x++) {
@@ -126,6 +156,33 @@ public class RocketeerBehavior {
         return null;
     }
 
+    public void enterRestockMode() {
+        if (rocketeer.getRocketCount() <= 0) { // Ensure we only enter restock mode if rockets are 0
+            isRestocking = true;
+            // Clear any target and stop combat
+            if (combatTask != null) {
+                combatTask.cancel();
+                combatTask = null;
+            }
+
+            Location resupplyStation = findNearestResupplyStation();
+            if (resupplyStation != null) {
+                rocketeer.getEntity().getPathfinder().moveTo(resupplyStation);
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        if (rocketeer.getEntity().getLocation().distance(resupplyStation) < 2) {
+                            restockRockets();
+                            this.cancel();
+                        }
+                    }
+                }.runTaskTimer(plugin, 0, 20); // Check every second
+            } else {
+                enterPanicMode();
+            }
+        }
+    }
+
     private void restockRockets() {
         if (restockTask != null) {
             restockTask.cancel();
@@ -133,22 +190,33 @@ public class RocketeerBehavior {
 
         restockTask = new BukkitRunnable() {
             int restockedRockets = 0;
+
             @Override
             public void run() {
                 if (restockedRockets < 5 && rocketeer.getEntity().isValid()) {
                     rocketeer.setRocketCount(rocketeer.getRocketCount() + 1);
                     restockedRockets++;
-                    rocketeer.playRestockSound(); // Added this line to use the playRestockSound method
+                    rocketeer.playRestockSound();
                 } else {
                     isRestocking = false;
+                    // Ensure the correct transition out of restock mode
+                    if (rocketeer.getRocketCount() > 0) {
+                        Player nearestPlayer = findNearestPlayer();
+                        if (nearestPlayer != null && nearestPlayer.getGameMode() != GameMode.CREATIVE) {
+                            enterCombatMode(nearestPlayer);
+                        } else {
+                            enterPanicMode(); // Panic if no valid target is found
+                        }
+                    } else {
+                        enterPanicMode();
+                    }
                     this.cancel();
                 }
             }
         };
-        restockTask.runTaskTimer(plugin, 60, 40); // 3-second initial delay, then 2 seconds per rocket
+        restockTask.runTaskTimer(plugin, 60, 40);
     }
 
-    // Method declaration outside other methods
     public void interruptRestock() {
         if (restockTask != null) {
             restockTask.cancel();
@@ -161,8 +229,7 @@ public class RocketeerBehavior {
         }
     }
 
-    // Optimized method to find the nearest player
-    private Player findNearestPlayer() {
+    public Player findNearestPlayer() {
         Player nearest = null;
         double nearestDistance = Double.MAX_VALUE;
         Location rocketeerLocation = rocketeer.getEntity().getLocation();
@@ -183,7 +250,6 @@ public class RocketeerBehavior {
         return nearest;
     }
 
-    // Enhanced panic mode method with smarter fleeing
     public void enterPanicMode() {
         if (panicTask != null) {
             panicTask.cancel();
@@ -194,32 +260,29 @@ public class RocketeerBehavior {
 
             @Override
             public void run() {
-                if (ticks >= 160 || !rocketeer.getEntity().isValid()) { // Panic for 8 seconds (160 ticks)
+                if (ticks >= 160 || !rocketeer.getEntity().isValid()) { // Panic mode for 8 seconds
                     this.cancel();
                     return;
                 }
 
-                // Find nearest player to flee from
+                // Find the nearest player and flee
                 Player nearestPlayer = findNearestPlayer();
                 Location fleeLocation;
 
                 if (nearestPlayer != null) {
-                    // Calculate the direction opposite to the nearest player
+                    // Calculate the direction away from the player
                     fleeLocation = findFleeLocation(nearestPlayer.getLocation());
                 } else {
-                    // No players nearby, move randomly
-                    fleeLocation = findFleeLocation(null);
+                    fleeLocation = findFleeLocation(null); // Random movement if no player nearby
                 }
 
-                // Flee to the new location
                 rocketeer.getEntity().getPathfinder().moveTo(fleeLocation);
-                ticks += 20; // Increase the tick count every second
+                ticks += 20; // Increment the tick count
             }
         };
-        panicTask.runTaskTimer(plugin, 0, 20); // Update flee path every second
+        panicTask.runTaskTimer(plugin, 0, 20); // Update direction every second
     }
 
-    // Smart flee location, moves away from the nearest player
     private Location findFleeLocation(Location playerLocation) {
         Location currentLoc = rocketeer.getEntity().getLocation();
 
@@ -234,8 +297,7 @@ public class RocketeerBehavior {
         }
     }
 
-
-        public boolean isRestocking() {
-            return isRestocking;
-        }
+    public boolean isRestocking() {
+        return isRestocking;
     }
+}
