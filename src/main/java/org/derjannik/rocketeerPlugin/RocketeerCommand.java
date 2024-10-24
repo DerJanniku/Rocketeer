@@ -21,11 +21,10 @@ public class RocketeerCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (!(sender instanceof Player)) {
+        if (!(sender instanceof Player player)) {
             sender.sendMessage("This command can only be used by players!");
             return true;
         }
-        Player player = (Player) sender;
 
         if (args.length == 3) {
             try {
