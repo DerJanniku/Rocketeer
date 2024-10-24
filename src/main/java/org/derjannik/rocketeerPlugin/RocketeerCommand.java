@@ -1,3 +1,4 @@
+
 package org.derjannik.rocketeerPlugin;
 
 import org.bukkit.Location;
@@ -33,10 +34,7 @@ public class RocketeerCommand implements CommandExecutor {
                 double z = Double.parseDouble(args[2]);
                 Location location = new Location(player.getWorld(), x, y, z);
 
-                // Create a new Rocketeer instance
                 Rocketeer newRocketeer = new Rocketeer(location, plugin);
-
-                // Register the new Rocketeer with the plugin
                 plugin.addRocketeer(newRocketeer);
 
                 player.sendMessage("Rocketeer spawned at the specified location!");
@@ -44,21 +42,17 @@ public class RocketeerCommand implements CommandExecutor {
                 player.sendMessage("Invalid coordinates. Usage: /rocketeer [x] [y] [z]");
             }
         } else if (args.length == 1 && args[0].equalsIgnoreCase("egg")) {
-            // Give the player a custom Piglin spawn egg
             ItemStack spawnEgg = new ItemStack(Material.PIGLIN_SPAWN_EGG);
             SpawnEggMeta eggMeta = (SpawnEggMeta) spawnEgg.getItemMeta();
             if (eggMeta != null) {
                 eggMeta.setDisplayName("§cRocketeer Spawn Egg");
-                eggMeta.getPersistentDataContainer().set(plugin.getRocketKey(), PersistentDataType.STRING, "rocketeer_egg"); // Custom identifier
+                eggMeta.getPersistentDataContainer().set(plugin.getRocketKey(), PersistentDataType.STRING, "rocketeer_egg");
                 spawnEgg.setItemMeta(eggMeta);
             }
 
-            // Give the player the spawn egg
             player.getInventory().addItem(spawnEgg);
             player.sendMessage("Here is your Rocketeer spawn egg!");
-        }
-
-        else {
+        } else {
             player.sendMessage("Usage: /rocketeer [x] [y] [z] | /rocketeer egg");
         }
         return true;
