@@ -22,10 +22,8 @@ public class RocketeerPlugin extends JavaPlugin {
     public void onEnable() {
         // Initialize the NamespacedKey for storing rocket data
         this.rocketKey = new NamespacedKey(this, "rocket_count");
-
         // Initialize the NamespacedKey for storing combat data
         this.combatKey = new NamespacedKey(this, "combat_key");  // Added this line
-
         // Register the command "rocketeer" and set its executor
         PluginCommand rocketeerCommand = getCommand("rocketeer");
         if (rocketeerCommand != null) {
@@ -33,12 +31,22 @@ public class RocketeerPlugin extends JavaPlugin {
         } else {
             getLogger().severe("Failed to register 'rocketeer' command. Is it properly defined in plugin.yml?");
         }
-
         // Register the listener for events
         getServer().getPluginManager().registerEvents(new RocketeerListener(this), this);
-
         // Log enabling of the plugin
         getLogger().info("RocketeerPlugin has been enabled!");
+        // Ensure Rocketeer instances are correctly managed
+        getServer().getPluginManager().registerEvents(new Listener() {
+            @EventHandler
+            public void onEntityDeath(EntityDeathEvent event) {
+                if (event.getEntity() instanceof Piglin) {
+                    Rocketeer rocketeer = getRocketeerByEntity(event.getEntity());
+                    if (rocketeer != null) {
+                        removeRocketeer(rocketeer);
+                    }
+                }
+            }
+        }, this);
     }
 
     @Override

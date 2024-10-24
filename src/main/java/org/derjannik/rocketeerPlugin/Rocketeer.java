@@ -47,48 +47,45 @@ public class Rocketeer implements Listener {
     public Rocketeer(Location location, RocketeerPlugin plugin) {
         this.plugin = plugin;
         this.entity = (Piglin) location.getWorld().spawnEntity(location, EntityType.PIGLIN);
-
         // Set the custom name using Adventure API
         this.entity.customName(ROCKETEER_NAME);
         this.entity.setCustomNameVisible(true);
-
         // Set attributes safely
         if (entity.getAttribute(Attribute.GENERIC_MAX_HEALTH) != null) {
             Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_MAX_HEALTH)).setBaseValue(MAX_HEALTH);
         }
         entity.setHealth(BASE_HEALTH);
-
         if (entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED) != null) {
             Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED)).setBaseValue(MOVEMENT_SPEED);
         }
-
         if (entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE) != null) {
             Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE)).setBaseValue(FOLLOW_RANGE);
         }
-
         // Fire Resistance Effect
         this.entity.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 999999, 0, false, false));
-
         // Persistence
         this.entity.setRemoveWhenFarAway(false);
-
         // Zombification immunity
         this.entity.setImmuneToZombification(true);
-
         // Not a baby (this is deprecated, but it's fine to use for now)
         this.entity.setBaby(false);
-
         // Cannot pick up loot
         this.entity.setCanPickupItems(false);
-
         this.dataContainer = this.entity.getPersistentDataContainer();
         this.dataContainer.set(plugin.getRocketKey(), PersistentDataType.INTEGER, 5); // Store rocket count
-
         equipRocketeer();
         spawnHoveringRockets();
-
         this.behavior = new RocketeerBehavior(this, plugin);
         Bukkit.getPluginManager().registerEvents(this, plugin); // Register the event listener
+        // Check for resupply station within 100 blocks
+        Location resupplyStation = findNearestResupplyStation(100);
+        if (resupplyStation == null) {
+            // Increase search radius to 1000 blocks if no station is found within 100 blocks
+            resupplyStation = findNearestResupplyStation(1000);
+        }
+        if (resupplyStation != null) {
+            entity.getPathfinder().moveTo(resupplyStation);
+        }
     }
 
     public Piglin getEntity() {

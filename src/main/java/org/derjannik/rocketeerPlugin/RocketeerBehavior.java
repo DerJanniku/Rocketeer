@@ -108,6 +108,44 @@ public class RocketeerBehavior {
         }
     }
 
+    public void enterPanicMode() {
+        if (panicTask != null) {
+            panicTask.cancel();
+        }
+
+        panicTask = new BukkitRunnable() {
+            int ticks = 0;
+
+            @Override
+            public void run() {
+                if (ticks < 160) { // Run away for 8 seconds (20 ticks per second)
+                    rocketeer.getEntity().getPathfinder().moveTo(rocketeer.getEntity().getLocation().add(rocketeer.getEntity().getLocation().getDirection().multiply(-1)));
+                    ticks++;
+                } else {
+                    this.cancel();
+                }
+            }
+        };
+        panicTask.runTaskTimer(plugin, 0, 1); // Run every tick
+    }
+
+    private Location findNearestResupplyStation(int searchRadius) {
+        Location rocketeerLoc = rocketeer.getEntity().getLocation();
+        org.bukkit.World world = rocketeerLoc.getWorld();
+
+        for (int x = -searchRadius; x <= searchRadius; x++) {
+            for (int y = -1; y <= 1; y++) {
+                for (int z = -searchRadius; z <= searchRadius; z++) {
+                    Location checkLoc = rocketeerLoc.clone().add(x, y, z);
+                    if (world.getBlockAt(checkLoc).getType() == Material.DECORATED_POT) {
+                        return checkLoc;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     private Location findNearestResupplyStation() {
         Location rocketeerLoc = rocketeer.getEntity().getLocation();
         org.bukkit.World world = rocketeerLoc.getWorld();
@@ -179,6 +217,8 @@ public class RocketeerBehavior {
                 }
             }
         }
+        return nearest;
+    }
 
         return nearest;
     }

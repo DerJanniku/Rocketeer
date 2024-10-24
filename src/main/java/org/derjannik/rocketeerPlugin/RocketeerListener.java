@@ -25,7 +25,9 @@ public class RocketeerListener implements Listener {
 
     @EventHandler
     public void onRocketeerTarget(EntityTargetLivingEntityEvent event) {
-        if (event.getEntity() instanceof Piglin piglin && event.getTarget() instanceof Player target) {
+        if (event.getEntity() instanceof Piglin && event.getTarget() instanceof Player) {
+            Piglin piglin = (Piglin) event.getEntity();
+            Player target = (Player) event.getTarget();
             if (isRocketeer(piglin)) {
                 Rocketeer rocketeer = plugin.getRocketeerByEntity(piglin);
                 if (rocketeer != null) {
