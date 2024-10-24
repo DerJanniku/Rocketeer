@@ -8,6 +8,7 @@ import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.GameMode;
 import org.bukkit.util.Vector;
 
 public class RocketeerBehavior {
@@ -58,7 +59,7 @@ public class RocketeerBehavior {
         combatTask.runTaskTimer(plugin, 0, 60); // Fire every 3 seconds
     }
 
-    private void fireRocket(Player target) {
+    public void fireRocket(Player target) {
         if (target == null || !target.isOnline() || !rocketeer.getEntity().isValid()) {
             return;
         }
@@ -136,6 +137,20 @@ public class RocketeerBehavior {
         return null;
     }
 
+    private void moveToResupplyStation(Location resupplyStation) {
+        rocketeer.getEntity().getPathfinder().moveTo(resupplyStation);
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (rocketeer.getEntity().getLocation().distance(resupplyStation) <= 5) {
+                    restockRockets();
+                    this.cancel();
+                }
+            }
+        }.runTaskTimer(plugin, 0, 20); // Check every second if near resupply station
+    }
+
     private void restockRockets() {
         if (restockTask != null) {
             restockTask.cancel();
@@ -151,6 +166,12 @@ public class RocketeerBehavior {
                     rocketeer.playRestockSound(); // Added this line to use the playRestockSound method
                 } else {
                     isRestocking = false;
+                    Player nearestPlayer = findNearestPlayer();
+                    if (nearestPlayer != null && nearestPlayer.getGameMode() != GameMode.CREATIVE) {
+                        enterCombatMode(nearestPlayer); // Re-enter combat after restocking
+                    } else {
+                        enterPanicMode(); // Panic if no target found
+                    }
                     this.cancel();
                 }
             }
@@ -172,7 +193,7 @@ public class RocketeerBehavior {
     }
 
     // Optimized method to find the nearest player
-    private Player findNearestPlayer() {
+    public Player findNearestPlayer() {
         Player nearest = null;
         double nearestDistance = Double.MAX_VALUE;
         Location rocketeerLocation = rocketeer.getEntity().getLocation();

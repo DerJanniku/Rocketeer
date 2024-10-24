@@ -100,6 +100,12 @@ public class Rocketeer implements Listener {
         updateHoveringRockets();
     }
 
+    public void loadRocket() {
+        // Logic to load a rocket into the crossbow
+        // This is a placeholder implementation
+        // You can add the actual logic as needed
+    }
+
     private void equipRocketeer() {
         ItemStack crossbow = new ItemStack(Material.CROSSBOW);
         ItemMeta crossbowMeta = crossbow.getItemMeta();
